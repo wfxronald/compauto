@@ -1,0 +1,18 @@
+<html>
+    <head>
+        {% if title %}
+        <title>{{ title }} - Compass Automation</title>
+        {% else %}
+        <title>Welcome to Compass Automation!</title>
+        {% endif %}
+    </head>
+
+    <body>
+        <div>
+            Compass Automation: <a href = "{{ url_for('index') }}">Home</a>
+        </div>
+        <hr>
+        {% block content %}
+        {% endblock %}
+    </body>
+</html>
