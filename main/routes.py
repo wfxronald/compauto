@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request
 from main import app
-from main.forms import LoginForm, MockForm
+from main.forms import LoginForm, MockForm, MainForm
 from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User
 from werkzeug.urls import url_parse
@@ -11,10 +11,11 @@ from werkzeug.urls import url_parse
 @login_required
 def index():
     form = MockForm()
+    main_form = MainForm()
     if form.validate_on_submit():
         flash("Data format is correct, but have not been stored yet")
         return redirect(url_for('index'))
-    return render_template('index.html', title='Home', form=form)
+    return render_template('index.html', title='Home', form=form, main_form=main_form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
