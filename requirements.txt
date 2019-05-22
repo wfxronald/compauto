@@ -1,3 +1,6 @@
 flask
 flask_wtf
-wtforms
+flask_sqlalchemy
+flask_migrate
+flask_bootstrap
+flask_login

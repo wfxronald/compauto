@@ -1,5 +1,8 @@
 venv/
 
+migrations/
+main/app.db
+
 *.pyc
 __pycache__/
 
