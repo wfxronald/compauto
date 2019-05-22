@@ -22,6 +22,11 @@ class LoadHomeTest(unittest.TestCase):
         assert res.status_code == 200
         assert b"fill up the form" in res.data
 
+    def test_route_login(self):
+        res = self.app.get("/login")
+        assert res.status_code == 200
+        assert b"Sign In" in res.data
+
     def test_route_random(self):
         res = self.app.get("/random")
         assert res.status_code == 404
