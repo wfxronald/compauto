@@ -4,6 +4,7 @@ from main.forms import LoginForm, MockForm, MainForm
 from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User
 from werkzeug.urls import url_parse
+from datetime import datetime
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -12,10 +13,11 @@ from werkzeug.urls import url_parse
 def index():
     form = MockForm()
     main_form = MainForm()
+    current_time = datetime.utcnow()
     if form.validate_on_submit():
         flash("Data format is correct, but have not been stored yet")
         return redirect(url_for('index'))
-    return render_template('index.html', title='Home', form=form, main_form=main_form)
+    return render_template('index.html', title='Home', form=form, main_form=main_form, current_time=current_time)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -26,11 +28,11 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(staff_id=form.staff_id.data).first()
 
         # Check if user has been registered and if the password matches
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid staff ID or password')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
 

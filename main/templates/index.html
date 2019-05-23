@@ -2,21 +2,32 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Hi, {{ current_user.username }}!</h1>
+    <h1>Welcome, {{ current_user.staff_name }}!</h1>
     <p>You should be able to fill up the form here!</p>
 
-    <h2>Particulars that should be automatically generated</h2>
-    <div class="row">
-        <div class="col-md-4">
-            {{ wtf.quick_form(form) }}
-        </div>
-    </div>
+    <p>Name of Staff: {{ current_user.staff_name }}</p>
+    <p>Staff ID: {{ current_user.staff_id }}</p>
+    <p>Staff Designation: {{ current_user.staff_designation }}</p>
+    <p>Date Appealed: {{ current_time }}</p>
 
     <h2>Details required for the application</h2>
-    <div class="row">
-        <div class="col-md-4">
-            {{ wtf.quick_form(main_form) }}
-        </div>
-    </div>
+    <form action="" method="post" novalidate>
+        {{ main_form.hidden_tag() }}
+        {{ wtf.form_errors(main_form, hiddens="only") }}
+
+        <h3>Opportunity created by</h3>
+        {{ wtf.form_field(main_form.created_by_name) }}
+        {{ wtf.form_field(main_form.created_by_id) }}
+        {{ wtf.form_field(main_form.create_date) }}
+
+        <h3>Opportunity closed by</h3>
+        {{ wtf.form_field(main_form.closed_by_name) }}
+        {{ wtf.form_field(main_form.closed_by_id) }}
+        {{ wtf.form_field(main_form.close_date) }}
+
+        <h3>Opportunity assigned to</h3>
+        {{ wtf.form_field(main_form.assign_to_name) }}
+        {{ wtf.form_field(main_form.assign_to_id) }}
+    </form>
 
 {% endblock %}
