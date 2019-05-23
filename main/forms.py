@@ -11,17 +11,20 @@ class LoginForm(FlaskForm):
 
 
 class MainForm(FlaskForm):
-    created_by_name = StringField('Name of Staff')
-    created_by_id = StringField('Staff ID')
-    create_date = DateField('Date Created')
+    # TO-DO: To be changed to use a drop-down list, which is less prone to error
+    # TO-DO: Also can try to include a database consisting of name of staff and staff ID, to bind the data together
+    # so that there is no need to retype Staff ID multiple times
+    created_by_name = StringField('Name of Staff', validators=[DataRequired()])
+    created_by_id = StringField('Staff ID', validators=[DataRequired()])
+    create_date = DateField('Date Created in YYYY-MM-DD format', validators=[DataRequired()])
 
-    closed_by_name = StringField('Name of Staff')
-    closed_by_id = StringField('Staff ID')
-    close_date = DateField('Date Closed')
+    closed_by_name = StringField('Name of Staff', validators=[DataRequired()])
+    closed_by_id = StringField('Staff ID', validators=[DataRequired()])
+    close_date = DateField('Date Closed in YYYY-MM-DD format', validators=[DataRequired()])
 
-    assign_to_name = StringField('Name of Staff')
-    assign_to_id = StringField('Staff ID')
+    assign_to_name = StringField('Name of Staff', validators=[DataRequired()])
+    assign_to_id = StringField('Staff ID', validators=[DataRequired()])
 
-    pdt_name = StringField('Product Name')
+    pdt_name = StringField('Product Name', validators=[DataRequired()])
 
     submit = SubmitField('Submit Form')

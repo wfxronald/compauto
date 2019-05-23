@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, url_for, request
-from main import app
+from main import app, db
 from main.forms import LoginForm, MainForm
 from flask_login import current_user, login_user, logout_user, login_required
-from main.models import User
+from main.models import User, Request
 from werkzeug.urls import url_parse
 from datetime import datetime
 
@@ -13,9 +13,32 @@ from datetime import datetime
 def index():
     form = MainForm()
     current_time = datetime.utcnow()
+
     if form.validate_on_submit():
-        flash("Data format is correct, but have not been stored yet")
+        req = Request(requester_name=current_user.staff_name,
+                      requester_id=current_user.staff_id,
+                      requester_designation=current_user.staff_designation,
+                      request_date=current_time,
+
+                      created_by_name=form.created_by_name.data,
+                      created_by_id=form.created_by_id.data,
+                      create_date=form.create_date.data,
+
+                      closed_by_name=form.closed_by_name.data,
+                      closed_by_id=form.closed_by_id.data,
+                      close_date=form.close_date.data,
+
+                      assign_to_name=form.assign_to_name.data,
+                      assign_to_id=form.assign_to_id.data,
+
+                      pdt_name=form.pdt_name.data)
+
+        db.session.add(req)
+        db.session.commit()
+
+        flash("Congratulations, your request has been stored in the database")
         return redirect(url_for('index'))
+
     return render_template('index.html', title='Home', form=form, current_time=current_time)
 
 
@@ -46,7 +69,8 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    requests = Request.query.all()
+    return render_template('dashboard.html', requests=requests)
 
 
 @app.route('/logout')

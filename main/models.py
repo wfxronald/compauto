@@ -2,6 +2,7 @@ from main import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from main import login
+from datetime import datetime
 
 
 @login.user_loader
@@ -27,3 +28,28 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+class Request(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # This ID represents the unique identifier for each request
+
+    requester_name = db.Column(db.String(120))
+    requester_id = db.Column(db.String(10))
+    requester_designation = db.Column(db.String(10))
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    created_by_name = db.Column(db.String(120))
+    created_by_id = db.Column(db.String(10))
+    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    closed_by_name = db.Column(db.String(120))
+    closed_by_id = db.Column(db.String(10))
+    close_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    assign_to_name = db.Column(db.String(120))
+    assign_to_id = db.Column(db.String(10))
+
+    pdt_name = db.Column(db.String(60))
+
+    def __repr__(self):
+        return '<Request #{}>'.format(self.id)
