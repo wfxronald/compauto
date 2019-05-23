@@ -12,12 +12,12 @@ def load_user(id):
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)  # This ID is a running number index
     staff_id = db.Column(db.String(10), index=True, unique=True)  # Staff ID will be the username
-    staff_name = db.Column(db.String(120), unique=True)
+    staff_name = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
 
     # More details about the user
     staff_designation = db.Column(db.String(120))
-    permission = db.Column(db.Boolean)
+    has_permission = db.Column(db.Boolean)
 
     def __repr__(self):
         return '<Staff {} with ID {}>'.format(self.staff_name, self.staff_id)

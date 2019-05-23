@@ -12,22 +12,25 @@
 
     <h2>Details required for the application</h2>
     <form action="" method="post" novalidate>
-        {{ main_form.hidden_tag() }}
-        {{ wtf.form_errors(main_form, hiddens="only") }}
+        {{ form.hidden_tag() }}
+        {{ wtf.form_errors(form, hiddens="only") }}
 
         <h3>Opportunity created by</h3>
-        {{ wtf.form_field(main_form.created_by_name) }}
-        {{ wtf.form_field(main_form.created_by_id) }}
-        {{ wtf.form_field(main_form.create_date) }}
+        {{ wtf.form_field(form.created_by_name) }}
+        {{ wtf.form_field(form.created_by_id) }}
+        {{ wtf.form_field(form.create_date) }}
 
         <h3>Opportunity closed by</h3>
-        {{ wtf.form_field(main_form.closed_by_name) }}
-        {{ wtf.form_field(main_form.closed_by_id) }}
-        {{ wtf.form_field(main_form.close_date) }}
+        {{ wtf.form_field(form.closed_by_name) }}
+        {{ wtf.form_field(form.closed_by_id) }}
+        {{ wtf.form_field(form.close_date) }}
 
         <h3>Opportunity assigned to</h3>
-        {{ wtf.form_field(main_form.assign_to_name) }}
-        {{ wtf.form_field(main_form.assign_to_id) }}
+        {{ wtf.form_field(form.assign_to_name) }}
+        {{ wtf.form_field(form.assign_to_id) }}
+
+        {{ wtf.form_field(form.pdt_name) }}
+        {{ wtf.form_field(form.submit) }}
     </form>
 
 {% endblock %}

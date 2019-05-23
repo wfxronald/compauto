@@ -10,14 +10,6 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 
-class MockForm(FlaskForm):
-    username = StringField('Name of Staff', validators=[DataRequired()])
-    userid = StringField('Staff ID', validators=[DataRequired()])
-    designation = StringField('Designation', validators=[DataRequired()])
-    date = DateField('Date Appealed (in "YYYY-MM-DD" format)', validators=[DataRequired()])
-    submit = SubmitField('Submit Form')
-
-
 class MainForm(FlaskForm):
     created_by_name = StringField('Name of Staff')
     created_by_id = StringField('Staff ID')
@@ -31,3 +23,5 @@ class MainForm(FlaskForm):
     assign_to_id = StringField('Staff ID')
 
     pdt_name = StringField('Product Name')
+
+    submit = SubmitField('Submit Form')

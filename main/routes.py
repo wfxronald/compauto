@@ -11,12 +11,12 @@ from datetime import datetime
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    main_form = MainForm()
+    form = MainForm()
     current_time = datetime.utcnow()
-    if main_form.validate_on_submit():
+    if form.validate_on_submit():
         flash("Data format is correct, but have not been stored yet")
         return redirect(url_for('index'))
-    return render_template('index.html', title='Home', main_form=main_form, current_time=current_time)
+    return render_template('index.html', title='Home', form=form, current_time=current_time)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -42,6 +42,11 @@ def login():
 
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
+
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
 
 
 @app.route('/logout')
