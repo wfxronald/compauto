@@ -8,7 +8,7 @@
     <p>Name of Staff: {{ current_user.staff_name }}</p>
     <p>Staff ID: {{ current_user.staff_id }}</p>
     <p>Staff Designation: {{ current_user.staff_designation }}</p>
-    <p>Date Appealed: {{ current_time }}</p>
+    <p>Date Appealed: {{ moment(current_time).format('LLL') }}</p>
 
     <h2>Details required for the application</h2>
     <form action="" method="post" novalidate>
