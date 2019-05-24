@@ -13,6 +13,9 @@ from flask_table import Table, Col
 @login_required
 def index():
     form = MainForm()
+    form.created_by_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
+    form.closed_by_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
+    form.assign_to_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
     current_time = datetime.utcnow()
 
     if form.validate_on_submit():
