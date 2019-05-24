@@ -11,18 +11,16 @@ class LoginForm(FlaskForm):
 
 
 class MainForm(FlaskForm):
-    # TO-DO: Also can try to include a database consisting of name of staff and staff ID, to bind the data together
-    # so that there is no need to retype Staff ID multiple times
     created_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
-    created_by_id = StringField('Staff ID', validators=[DataRequired()])
+    created_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
     create_date = DateField('Date Created in YYYY-MM-DD format', validators=[DataRequired()])
 
     closed_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
-    closed_by_id = StringField('Staff ID', validators=[DataRequired()])
+    closed_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
     close_date = DateField('Date Closed in YYYY-MM-DD format', validators=[DataRequired()])
 
     assign_to_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
-    assign_to_id = StringField('Staff ID', validators=[DataRequired()])
+    assign_to_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
 
     pdt_name = StringField('Product Name', validators=[DataRequired()])
 

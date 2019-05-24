@@ -1,6 +1,28 @@
 {% extends "base.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
+{% block scripts %}
+{{ super() }}
+<script>
+    var e = document.getElementById("created_by_name");
+    e.addEventListener("change", function() {
+        document.getElementById("created_by_id").selectedIndex = e.selectedIndex;
+    });
+
+    var f = document.getElementById("closed_by_name");
+    f.addEventListener("change", function() {
+        document.getElementById("closed_by_id").selectedIndex = f.selectedIndex;
+    });
+
+    var g = document.getElementById("assign_to_name");
+    g.addEventListener("change", function() {
+        document.getElementById("assign_to_id").selectedIndex = g.selectedIndex;
+    });
+
+    <!-- Have yet to find a way to submit the disabled field, try to enable just before submit -->
+</script>
+{% endblock %}
+
 {% block app_content %}
     <h1>Welcome, {{ current_user.staff_name }}!</h1>
     <p>You should be able to fill up the form here!</p>
@@ -15,19 +37,20 @@
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
+        <!-- All staff ID is automatically generated from staff name, hence is disabled -->
         <h3>Opportunity created by</h3>
         {{ wtf.form_field(form.created_by_name) }}
-        {{ wtf.form_field(form.created_by_id) }}
+        {{ wtf.form_field(form.created_by_id, disabled=true) }}
         {{ wtf.form_field(form.create_date) }}
 
         <h3>Opportunity closed by</h3>
         {{ wtf.form_field(form.closed_by_name) }}
-        {{ wtf.form_field(form.closed_by_id) }}
+        {{ wtf.form_field(form.closed_by_id, disabled=true) }}
         {{ wtf.form_field(form.close_date) }}
 
         <h3>Opportunity assigned to</h3>
         {{ wtf.form_field(form.assign_to_name) }}
-        {{ wtf.form_field(form.assign_to_id) }}
+        {{ wtf.form_field(form.assign_to_id, disabled=true) }}
 
         {{ wtf.form_field(form.pdt_name) }}
         {{ wtf.form_field(form.submit) }}

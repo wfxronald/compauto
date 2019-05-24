@@ -13,9 +13,30 @@ from flask_table import Table, Col
 @login_required
 def index():
     form = MainForm()
+
     form.created_by_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
     form.closed_by_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
     form.assign_to_name.choices = [(g.staff_name, g.staff_name) for g in User.query.order_by('staff_name')]
+
+    # Maintain consistent ordering with the choices for staff name
+    form.created_by_id.choices = [(g.staff_id, g.staff_id) for g in User.query.order_by('staff_name')]
+    form.closed_by_id.choices = [(g.staff_id, g.staff_id) for g in User.query.order_by('staff_name')]
+    form.assign_to_id.choices = [(g.staff_id, g.staff_id) for g in User.query.order_by('staff_name')]
+
+    def add_empty_name(choices):
+        choices.insert(0, ("", "<Please Select>"))  # The empty option is the first option, i.e. default option
+
+    add_empty_name(form.created_by_name.choices)
+    add_empty_name(form.closed_by_name.choices)
+    add_empty_name(form.assign_to_name.choices)
+
+    def add_empty_id(choices):
+        choices.insert(0, ("", "<Select Name Above>"))  # The empty option is the first option, i.e. default option
+
+    add_empty_id(form.created_by_id.choices)
+    add_empty_id(form.closed_by_id.choices)
+    add_empty_id(form.assign_to_id.choices)
+
     current_time = datetime.utcnow()
 
     if form.validate_on_submit():
