@@ -4,53 +4,5 @@
 {% block app_content %}
     <h1>A dynamic table containing all the requests will appear here</h1>
     <p>However, this dashboard is only visible to the admin - or those people with permission</p>
-
-    <table border="1" cellpadding="5" cellspacing="5">
-        <!For headers, manuals until I find a way to loop through>
-        <tr>
-            <td>id</td>
-
-            <td>requester_name</td>
-            <td>requester_id</td>
-            <td>requester_designation</td>
-            <td>request_date</td>
-
-            <td>created_by_name</td>
-            <td>created_by_id</td>
-            <td>create_date</td>
-
-            <td>closed_by_name</td>
-            <td>closed_by_id</td>
-            <td>close_date</td>
-
-            <td>assign_to_name</td>
-            <td>assign_to_id</td>
-
-            <td>pdt_name</td>
-        </tr>
-        {% for request in requests %}
-            <tr>
-                {# As of now, placeholder until I find a way to loop through all columns #}
-                <td>{{ request.id }}</td>
-
-                <td>{{ request.requester_name }}</td>
-                <td>{{ request.requester_id }}</td>
-                <td>{{ request.requester_designation }}</td>
-                <td>{{ request.request_date }}</td>
-
-                <td>{{ request.created_by_name }}</td>
-                <td>{{ request.created_by_id }}</td>
-                <td>{{ request.create_date }}</td>
-
-                <td>{{ request.closed_by_name }}</td>
-                <td>{{ request.closed_by_id }}</td>
-                <td>{{ request.close_date }}</td>
-
-                <td>{{ request.assign_to_name }}</td>
-                <td>{{ request.assign_to_id }}</td>
-
-                <td>{{ request.pdt_name }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+    {{ request_table }}
 {% endblock %}

@@ -5,6 +5,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User, Request
 from werkzeug.urls import url_parse
 from datetime import datetime
+from flask_table import Table, Col
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -70,7 +71,31 @@ def login():
 @app.route('/dashboard')
 def dashboard():
     requests = Request.query.all()
-    return render_template('dashboard.html', requests=requests)
+
+    # Declaration of the request table to be presented in HTML form
+    class RequestTable(Table):
+        id = Col('id')
+
+        requester_name = Col('requester_name')
+        requester_id = Col('requester_id')
+        requester_designation = Col('requester_designation')
+        request_date = Col('request_date')
+
+        created_by_name = Col('created_by_name')
+        created_by_id = Col('created_by_id')
+        create_date = Col('create_date')
+
+        closed_by_name = Col('closed_by_name')
+        closed_by_id = Col('closed_by_id')
+        close_date = Col('close_date')
+
+        assign_to_name = Col('assign_to_name')
+        assign_to_id = Col('assign_to_id')
+
+        pdt_name = Col('pdt_name')
+
+    request_table = RequestTable(requests)
+    return render_template('dashboard.html', request_table=request_table)
 
 
 @app.route('/logout')
