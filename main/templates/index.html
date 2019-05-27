@@ -23,6 +23,23 @@
         $("#closed_by_id").prop("disabled", false);
         $("#assign_to_id").prop("disabled", false);
     });
+
+    // When radio button is already selected, hide the non-relevant element
+    if (document.getElementById('reason-0').checked) $(".created,.assigned").hide();
+    if (document.getElementById('reason-1').checked) $(".created,.closed").hide();
+
+    // Hide the non-relevant element
+    $("#reason-0").change(function() { // For closed
+        $(".created,.assigned").hide();
+        $(".closed").show();
+    });
+    $("#reason-1").change(function() { // For assigned
+        $(".created,.closed").hide();
+        $(".assigned").show();
+    });
+    $("#reason-2").change(function() { // For others
+        $(".created, .closed, .assigned").show();
+    });
 </script>
 {% endblock %}
 
@@ -40,23 +57,31 @@
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
+        <h3>Reason for Request</h3>
+        {{ wtf.form_field(form.reason) }}
+
         <!-- All staff ID is automatically generated from staff name, hence is disabled -->
-        <h3>Opportunity created by</h3>
-        {{ wtf.form_field(form.created_by_name) }}
-        {{ wtf.form_field(form.created_by_id, disabled=true) }}
-        {{ wtf.form_field(form.create_date) }}
+        <div class="created">
+            <h3>Opportunity created by</h3>
+            {{ wtf.form_field(form.created_by_name) }}
+            {{ wtf.form_field(form.created_by_id, disabled=true) }}
+            {{ wtf.form_field(form.create_date) }}
+        </div>
 
-        <h3>Opportunity closed by</h3>
-        {{ wtf.form_field(form.closed_by_name) }}
-        {{ wtf.form_field(form.closed_by_id, disabled=true) }}
-        {{ wtf.form_field(form.close_date) }}
+        <div class="closed">
+            <h3>Opportunity closed by</h3>
+            {{ wtf.form_field(form.closed_by_name) }}
+            {{ wtf.form_field(form.closed_by_id, disabled=true) }}
+            {{ wtf.form_field(form.close_date) }}
+        </div>
 
-        <h3>Opportunity assigned to</h3>
-        {{ wtf.form_field(form.assign_to_name) }}
-        {{ wtf.form_field(form.assign_to_id, disabled=true) }}
+        <div class="assigned">
+            <h3>Opportunity assigned to</h3>
+            {{ wtf.form_field(form.assign_to_name) }}
+            {{ wtf.form_field(form.assign_to_id, disabled=true) }}
+        </div>
 
         {{ wtf.form_field(form.pdt_name) }}
         {{ wtf.form_field(form.submit) }}
     </form>
-
 {% endblock %}
