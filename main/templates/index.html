@@ -4,22 +4,20 @@
 {% block scripts %}
 {{ super() }}
 <script>
-    var e = document.getElementById("created_by_name");
-    e.addEventListener("change", function() {
-        document.getElementById("created_by_id").selectedIndex = e.selectedIndex;
-    });
+    // A function to bind the staff name and staff id
+    function changeIdWhenNameChanges(name, id) {
+        var elemName = document.getElementById(name);
+        var elemId = document.getElementById(id);
+        elemName.addEventListener("change", function() {
+            elemId.selectedIndex = elemName.selectedIndex;
+        });
+    }
 
-    var f = document.getElementById("closed_by_name");
-    f.addEventListener("change", function() {
-        document.getElementById("closed_by_id").selectedIndex = f.selectedIndex;
-    });
+    changeIdWhenNameChanges("created_by_name", "created_by_id");
+    changeIdWhenNameChanges("closed_by_name", "closed_by_id");
+    changeIdWhenNameChanges("assign_to_name", "assign_to_id");
 
-    var g = document.getElementById("assign_to_name");
-    g.addEventListener("change", function() {
-        document.getElementById("assign_to_id").selectedIndex = g.selectedIndex;
-    });
-
-    <!-- Ensure that the disabled field is still submitted -->
+    // Ensure that the disabled field is still submitted
     $("#req_form").submit(function(event) {
         $("#created_by_id").prop("disabled", false);
         $("#closed_by_id").prop("disabled", false);
