@@ -43,16 +43,22 @@ class Request(db.Model):
 
     created_by_name = db.Column(db.String(120))
     created_by_id = db.Column(db.String(10))
-    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+    create_date = db.Column(db.DateTime)
 
     closed_by_name = db.Column(db.String(120))
     closed_by_id = db.Column(db.String(10))
-    close_date = db.Column(db.DateTime, default=datetime.utcnow)
+    close_date = db.Column(db.DateTime)
 
     assign_to_name = db.Column(db.String(120))
     assign_to_id = db.Column(db.String(10))
 
     pdt_name = db.Column(db.String(60))
+
+    # Storing the approval details of this request
+    is_approved = db.Column(db.Boolean)
+    approved_by_name = db.Column(db.String(120))
+    approved_by_id = db.Column(db.String(120))
+    approve_date = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Request #{}>'.format(self.id)

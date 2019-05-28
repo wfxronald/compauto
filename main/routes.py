@@ -59,7 +59,9 @@ def index():
                       assign_to_name=form.assign_to_name.data,
                       assign_to_id=form.assign_to_id.data,
 
-                      pdt_name=form.pdt_name.data)
+                      pdt_name=form.pdt_name.data,
+
+                      is_approved=False)
 
         db.session.add(req)
         db.session.commit()
@@ -99,7 +101,7 @@ def login():
 @login_required
 def dashboard():
     form = ApproveForm()
-    requests = Request.query.all()
+    requests = Request.query.order_by(Request.is_approved, Request.id)  # Sort by date requested as a form of priority?
 
     # Declaration of the request table to be presented in HTML form
     class RequestTable(Table):
@@ -126,6 +128,11 @@ def dashboard():
 
         pdt_name = Col('pdt_name')
 
+        is_approved = Col('is_approved')
+        approved_by_name = Col('approved_by_name')
+        approved_by_id = Col('approved_by_id')
+        approve_date = Col('approve_date')
+
     request_table = RequestTable(requests)
 
     logged_user = User.query.filter_by(id=current_user.id).first()
@@ -137,6 +144,10 @@ def dashboard():
         req_to_be_approved = Request.query.filter_by(id=form.req_id.data).first()
         if not req_to_be_approved:
             flash('The request ID you have input is invalid.')
+            return redirect(url_for('dashboard'))
+
+        if req_to_be_approved.is_approved:
+            flash('The request has been approved previously.')
             return redirect(url_for('dashboard'))
 
         crm_identifier = req_to_be_approved.crm_app_no
@@ -160,9 +171,17 @@ def dashboard():
         opp_to_be_changed.assign_to_id = req_to_be_approved.assign_to_id
 
         opp_to_be_changed.pdt_name = req_to_be_approved.pdt_name
-        db.session.commit()
-        flash('Congratulations, opportunity database has been successfully modified.')
 
+        # Modify the request table to indicate approval
+        req_to_be_approved.is_approved = True
+        req_to_be_approved.approved_by_name = logged_user.staff_name
+        req_to_be_approved.approved_by_id = logged_user.staff_id
+        req_to_be_approved.approve_date = datetime.utcnow()
+
+        db.session.commit()
+
+        flash('Congratulations, opportunity database has been successfully modified.')
+        return redirect(url_for('dashboard'))
     return render_template('dashboard.html', request_table=request_table, form=form)
 
 
