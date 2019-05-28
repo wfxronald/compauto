@@ -64,7 +64,7 @@ def index():
         db.session.add(req)
         db.session.commit()
 
-        flash("Congratulations, your request has been stored in the database")
+        flash("Congratulations, your request has been stored in the database.")
         return redirect(url_for('index'))
 
     return render_template('index.html', title='Home', form=form, current_time=current_time)
@@ -82,7 +82,7 @@ def login():
 
         # Check if user has been registered and if the password matches
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid staff ID or password')
+            flash('Invalid staff ID or password.')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
 
@@ -96,7 +96,7 @@ def login():
 
 
 @app.route('/dashboard')
-# Should check if you have permission before allowing access
+@login_required
 def dashboard():
     requests = Request.query.all()
 
@@ -126,10 +126,17 @@ def dashboard():
         pdt_name = Col('pdt_name')
 
     request_table = RequestTable(requests)
-    return render_template('dashboard.html', request_table=request_table)
+
+    logged_user = User.query.filter_by(id=current_user.id).first()
+    if logged_user.has_permission:  # Only admin can access the request dashboard
+        return render_template('dashboard.html', request_table=request_table)
+    else:
+        flash('You have no permission to access this page.')
+        return redirect(url_for('index'))
 
 
 @app.route('/opportunity')
+@login_required
 def opportunity():
     opp = Opportunity.query.all()
 
@@ -158,4 +165,5 @@ def opportunity():
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    flash('You have been logged out.')
+    return redirect(url_for('login'))
