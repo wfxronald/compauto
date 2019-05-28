@@ -135,8 +135,15 @@ def dashboard():
 
     if form.validate_on_submit():
         req_to_be_approved = Request.query.filter_by(id=form.req_id.data).first()
+        if not req_to_be_approved:
+            flash('The request ID you have input is invalid.')
+            return redirect(url_for('dashboard'))
+
         crm_identifier = req_to_be_approved.crm_app_no
         opp_to_be_changed = Opportunity.query.filter_by(crm_app_no=crm_identifier).first()
+        if not opp_to_be_changed:
+            flash('There is no opportunity with the specified CRM Application number.')
+            return redirect(url_for('dashboard'))
 
         # Modify the opportunity database
         opp_to_be_changed.fna_no = req_to_be_approved.fna_no
