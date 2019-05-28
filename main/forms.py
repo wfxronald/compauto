@@ -11,11 +11,6 @@ class LoginForm(FlaskForm):
 
 
 class MainForm(FlaskForm):
-    reason = RadioField('Reason for Request', choices=[('closed', 'Close-related issues: Closed late, forgot to close'),
-                                                       ('assigned', 'Assign-related issues: Assigned wrongly'),
-                                                       ('others', 'Other issues: Keyed in wrongly, etc')],
-                        validators=[DataRequired()])
-
     created_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
     created_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
     create_date = DateField('Date Created in YYYY-MM-DD format', validators=[DataRequired()])
