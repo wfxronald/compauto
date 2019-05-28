@@ -11,6 +11,9 @@ class LoginForm(FlaskForm):
 
 
 class MainForm(FlaskForm):
+    crm_app_no = StringField('CRM Application Number', validators=[DataRequired()])
+    fna_no = StringField('FNA Number', validators=[DataRequired()])
+
     created_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
     created_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
     create_date = DateField('Date Created in YYYY-MM-DD format', validators=[DataRequired()])
@@ -25,3 +28,8 @@ class MainForm(FlaskForm):
     pdt_name = StringField('Product Name', validators=[DataRequired()])
 
     submit = SubmitField('Submit Form')
+
+
+class ApproveForm(FlaskForm):
+    req_id = StringField('Enter a valid Request ID to approve', validators=[DataRequired()])  # Must be within length
+    submit = SubmitField('Approve')

@@ -40,6 +40,9 @@
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
+        {{ wtf.form_field(form.crm_app_no) }}
+        {{ wtf.form_field(form.fna_no) }}
+
         <!-- All staff ID is automatically generated from staff name, hence is disabled -->
         <div class="created">
             <h3>Opportunity created by</h3>

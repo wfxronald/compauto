@@ -38,6 +38,9 @@ class Request(db.Model):
     requester_designation = db.Column(db.String(10))
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
 
+    crm_app_no = db.Column(db.String(15))  # This should be a foreign key
+    fna_no = db.Column(db.String(10))
+
     created_by_name = db.Column(db.String(120))
     created_by_id = db.Column(db.String(10))
     create_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -53,3 +56,24 @@ class Request(db.Model):
 
     def __repr__(self):
         return '<Request #{}>'.format(self.id)
+
+
+class Opportunity(db.Model):
+    crm_app_no = db.Column(db.String(15), primary_key=True)  # This is a unique identifier of all opportunity
+    fna_no = db.Column(db.String(10))
+
+    created_by_name = db.Column(db.String(120))
+    created_by_id = db.Column(db.String(10))
+    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    closed_by_name = db.Column(db.String(120))
+    closed_by_id = db.Column(db.String(10))
+    close_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    assign_to_name = db.Column(db.String(120))
+    assign_to_id = db.Column(db.String(10))
+
+    pdt_name = db.Column(db.String(60))
+
+    def __repr__(self):
+        return '<Opportunity #{}>'.format(self.crm_app_no)
