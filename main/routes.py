@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request
 from main import app, db
-from main.forms import LoginForm, MainForm
+from main.forms import LoginForm, MainForm, ApproveForm
 from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User, Request, Opportunity
 from werkzeug.urls import url_parse
@@ -95,9 +95,10 @@ def login():
     return render_template('login.html', title='Sign In', form=form)
 
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    form = ApproveForm()
     requests = Request.query.all()
 
     # Declaration of the request table to be presented in HTML form
@@ -128,11 +129,34 @@ def dashboard():
     request_table = RequestTable(requests)
 
     logged_user = User.query.filter_by(id=current_user.id).first()
-    if logged_user.has_permission:  # Only admin can access the request dashboard
-        return render_template('dashboard.html', request_table=request_table)
-    else:
+    if not logged_user.has_permission:  # Only admin can access the request dashboard
         flash('You have no permission to access this page.')
         return redirect(url_for('index'))
+
+    if form.validate_on_submit():
+        req_to_be_approved = Request.query.filter_by(id=form.req_id.data).first()
+        crm_identifier = req_to_be_approved.crm_app_no
+        opp_to_be_changed = Opportunity.query.filter_by(crm_app_no=crm_identifier).first()
+
+        # Modify the opportunity database
+        opp_to_be_changed.fna_no = req_to_be_approved.fna_no
+
+        opp_to_be_changed.created_by_name = req_to_be_approved.created_by_name
+        opp_to_be_changed.created_by_id = req_to_be_approved.created_by_id
+        opp_to_be_changed.create_date = req_to_be_approved.create_date
+
+        opp_to_be_changed.closed_by_name = req_to_be_approved.closed_by_name
+        opp_to_be_changed.closed_by_id = req_to_be_approved.closed_by_id
+        opp_to_be_changed.close_date = req_to_be_approved.close_date
+
+        opp_to_be_changed.assign_to_name = req_to_be_approved.assign_to_name
+        opp_to_be_changed.assign_to_id = req_to_be_approved.assign_to_id
+
+        opp_to_be_changed.pdt_name = req_to_be_approved.pdt_name
+        db.session.commit()
+        flash('Congratulations, opportunity database has been successfully modified.')
+
+    return render_template('dashboard.html', request_table=request_table, form=form)
 
 
 @app.route('/opportunity')
