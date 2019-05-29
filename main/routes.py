@@ -110,6 +110,8 @@ def dashboard():
 
     # Declaration of the request table to be presented in HTML form
     class RequestTable(Table):
+        classes = ['table', 'table-bordered', 'table-hover']
+
         id = Col('id')
 
         requester_name = Col('requester_name')
@@ -137,6 +139,12 @@ def dashboard():
         approved_by_name = Col('approved_by_name')
         approved_by_id = Col('approved_by_id')
         approve_date = Col('approve_date')
+
+        def get_tr_attrs(self, item):
+            if item.is_approved:
+                return {'class': 'success'}
+            else:
+                return {}
 
     request_table = RequestTable(requests)
 
@@ -187,7 +195,7 @@ def dashboard():
 
         flash('Congratulations, opportunity database has been successfully modified.')
         return redirect(url_for('dashboard'))
-    return render_template('dashboard.html', request_table=request_table, form=form)
+    return render_template('dashboard.html', title='Request Dashboard', request_table=request_table, form=form)
 
 
 @app.route('/opportunity')
@@ -197,6 +205,8 @@ def opportunity():
 
     # Declaration of the opportunity table to be presented in HTML form
     class OppTable(Table):
+        classes = ['table', 'table-bordered', 'table-hover']
+
         crm_app_no = Col('crm_app_no')
         fna_no = Col('fna_no')
 
@@ -214,7 +224,7 @@ def opportunity():
         pdt_name = Col('pdt_name')
 
     opp_table = OppTable(opp)
-    return render_template('opportunity.html', opp_table=opp_table)
+    return render_template('opportunity.html', title='Opportunity Database', opp_table=opp_table)
 
 
 @app.route('/logout')

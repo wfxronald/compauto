@@ -4,7 +4,9 @@
 {% block app_content %}
     <h1>A dashboard containing a list of requests for appeal.</h1>
     <p>However, this dashboard is only visible to the admin - or those people with permission</p>
-    {{ request_table }}
+    <div class="table-responsive">
+        {{ request_table }}
+    </div>
 
     <form id="approve_form" action="" method="post" novalidate>
         {{ form.hidden_tag() }}
