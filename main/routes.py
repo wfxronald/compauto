@@ -6,6 +6,7 @@ from main.models import User, Request, Opportunity
 from werkzeug.urls import url_parse
 from datetime import datetime
 from flask_table import Table, Col
+from sqlalchemy.exc import IntegrityError
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -63,8 +64,12 @@ def index():
 
                       is_approved=False)
 
-        db.session.add(req)
-        db.session.commit()
+        try:
+            db.session.add(req)
+            db.session.commit()
+        except IntegrityError:
+            flash('The CRM Application No you input does not exist in the database')
+            return redirect(url_for('index'))
 
         flash("Congratulations, your request has been stored in the database.")
         return redirect(url_for('index'))

@@ -38,7 +38,7 @@ class Request(db.Model):
     requester_designation = db.Column(db.String(10))
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
 
-    crm_app_no = db.Column(db.String(15))  # This should be a foreign key
+    crm_app_no = db.Column(db.String(15), db.ForeignKey('opportunity.crm_app_no'), nullable=False)
     fna_no = db.Column(db.String(10))
 
     created_by_name = db.Column(db.String(120))
@@ -80,6 +80,8 @@ class Opportunity(db.Model):
     assign_to_id = db.Column(db.String(10))
 
     pdt_name = db.Column(db.String(60))
+
+    requests = db.relationship('Request', backref='opportunity', lazy=True)
 
     def __repr__(self):
         return '<Opportunity #{}>'.format(self.crm_app_no)
