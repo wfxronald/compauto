@@ -64,10 +64,13 @@ def index():
 
                       is_approved=False)
 
-        try:
+        # Use a manual foreign key check rather than one that is ingrained in the database
+        foreign_key = form.crm_app_no.data
+        opp_referenced = Opportunity.query.filter_by(crm_app_no=foreign_key).first()
+        if opp_referenced:
             db.session.add(req)
             db.session.commit()
-        except IntegrityError:
+        else:
             flash('The CRM Application No you input does not exist in the database')
             return redirect(url_for('index'))
 
