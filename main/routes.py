@@ -6,7 +6,6 @@ from main.models import User, Request, Opportunity
 from werkzeug.urls import url_parse
 from datetime import datetime
 from flask_table import Table, Col
-from sqlalchemy.exc import IntegrityError
 
 
 @app.route('/', methods=['GET', 'POST'])

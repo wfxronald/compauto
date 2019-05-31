@@ -65,21 +65,83 @@ class Request(db.Model):
 
 
 class Opportunity(db.Model):
-    crm_app_no = db.Column(db.String(15), primary_key=True, index=True)  # A unique identifier of all opportunity
-    fna_no = db.Column(db.String(10))
+    CRM_Appln_No = db.Column(db.String(15), primary_key=True, index=True)  # A unique identifier of all opportunity
+    id = db.Column(db.String(10))
 
-    created_by_name = db.Column(db.String(120))
-    created_by_id = db.Column(db.String(10))
-    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+    Cust_Indicator = db.Column(db.String(1))
+    Fullname = db.Column(db.String(120))
+    ID_No = db.Column(db.String(30))
 
-    closed_by_name = db.Column(db.String(120))
-    closed_by_id = db.Column(db.String(10))
-    close_date = db.Column(db.DateTime, default=datetime.utcnow)
+    Created_by_name = db.Column(db.String(120))
+    Created_by_ID = db.Column(db.String(10))
+    Create_date = db.Column(db.DateTime)
 
-    assign_to_name = db.Column(db.String(120))
-    assign_to_id = db.Column(db.String(10))
+    Closed_by_name = db.Column(db.String(120))
+    Closed_by_ID = db.Column(db.String(10))
+    Close_date = db.Column(db.DateTime)
 
-    pdt_name = db.Column(db.String(60))
+    Assign_to_name = db.Column(db.String(120))
+    Assign_to_ID = db.Column(db.String(10))
+
+    Insurance_Ref = db.Column(db.String(10))
+
+    Product_Name_L1 = db.Column(db.String(30))
+    Product_Name_L2 = db.Column(db.String(30))
+    Product_Name_L3 = db.Column(db.String(30))
+    Product_Code = db.Column(db.String(30))
+
+    SalesType = db.Column(db.String(30))
+    RefNo_Caption = db.Column(db.String(30))
+    Base_Curr_Caption = db.Column(db.String(60))
+    Alt_Curr_Caption = db.Column(db.String(60))
+    Opty_Amt_Caption = db.Column(db.String(60))
+    Opty_Amt = db.Column(db.Float)
+    OD_Facility_Amt = db.Column(db.Float)
+
+    Currency_code = db.Column(db.String(5))
+    AltCurrency_code = db.Column(db.String(5))
+
+    Opty_Source = db.Column(db.String(120))
+    Opty_Type = db.Column(db.String(120))
+    Referral_Code = db.Column(db.String(10))
+    Referral_Comment = db.Column(db.String(60))
+
+    Match = db.Column(db.String(1))
+    Acct_No = db.Column(db.String(10))
+    Acct_open_date = db.Column(db.Date)
+    Match_Amt = db.Column(db.Float)
+
+    Decline = db.Column(db.String(1))
+    Decline_by_ID = db.Column(db.String(10))
+    Decline_by_name = db.Column(db.String(120))
+    Decline_date = db.Column(db.DateTime)
+    Decline_Reason = db.Column(db.String(120))
+
+    Assign_by_ID = db.Column(db.String(10))
+    Assign_by_dt = db.Column(db.DateTime)
+
+    rp_pymt_freq = db.Column(db.String(30))
+    FD_TENOR = db.Column(db.String(30))
+    WEIGHTED_MARGIN = db.Column(db.Integer)
+    PRE_RECEIVE = db.Column(db.Float)
+    INTERIM_REV_PTS = db.Column(db.Float)
+
+    Admin_Update = db.Column(db.String(60))
+    Updated_by_name = db.Column(db.String(120))
+    Updated_by_ID = db.Column(db.String(10))
+    Update_date = db.Column(db.DateTime)
+
+    Match_Dt = db.Column(db.DateTime)
+    Unmatch_Dt = db.Column(db.DateTime)
+
+    RevShareTSO = db.Column(db.Integer)
+    RevShareRM = db.Column(db.Integer)
+    INTERIM_REV_PTS_TSO = db.Column(db.Float)
+    RP_Term = db.Column(db.String(30))
+    FNA_No = db.Column(db.String(10))
+
+    Property_Status = db.Column(db.String(60))
+    Property_Type = db.Column(db.String(60))
 
     def __repr__(self):
-        return '<Opportunity #{}>'.format(self.crm_app_no)
+        return '<Opportunity #{}>'.format(self.CRM_Appln_No)
