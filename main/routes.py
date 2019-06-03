@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, jsonify
 from main import app, db
 from main.forms import LoginForm, MainForm, ApproveForm
 from flask_login import current_user, login_user, logout_user, login_required
@@ -292,3 +292,16 @@ def logout():
     logout_user()
     flash('You have been logged out.')
     return redirect(url_for('login'))
+
+
+@app.route('/receiver', methods=['POST'])
+def receiver():
+    data = request.get_json()
+    crm_app_no = data['crm_app_no']
+
+    selected_opp = Opportunity.query.filter_by(CRM_Appln_No=crm_app_no).first()
+    if not selected_opp:
+        return jsonify({"success": False})
+    opp_serialized = selected_opp.__dict__
+    opp_serialized.pop('_sa_instance_state')  # Remove the non-relevant key in the resulting dictionary
+    return jsonify({"opp": opp_serialized, "success": True})

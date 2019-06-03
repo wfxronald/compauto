@@ -13,16 +13,49 @@
         });
     }
 
-    changeIdWhenNameChanges("created_by_name", "created_by_id");
     changeIdWhenNameChanges("closed_by_name", "closed_by_id");
     changeIdWhenNameChanges("assign_to_name", "assign_to_id");
 
     // Ensure that the disabled field is still submitted
     $("#req_form").submit(function(event) {
-        $("#created_by_id").prop("disabled", false);
         $("#closed_by_id").prop("disabled", false);
         $("#assign_to_id").prop("disabled", false);
     });
+
+    // Mechanism to verify the CRM Application Number
+    $("#verify").click(function() {
+        var crmAppNo = $("#crm-app-no").val();
+        contactReceiver(crmAppNo);
+    });
+
+    function contactReceiver(crmAppNo) {
+        var jsonToTransfer = {"crm_app_no": crmAppNo};
+        $.ajax("{{ url_for('receiver') }}", {
+            data: JSON.stringify(jsonToTransfer),
+            contentType: 'application/json',
+            type: 'POST',
+            success: function(data) {
+                console.log(data);
+                if (!data["success"]) {
+                    alert("The CRM Application Number you input does not exist, please check again");
+                }
+                else {
+                    loadDetailsFromJson(data);
+                }
+            }
+        });
+        event.preventDefault();
+    }
+
+    function loadDetailsFromJson(jsonFile) {
+        $("#Fullname").html(jsonFile.opp.Fullname);
+        $("#ID_No").html(jsonFile.opp.ID_No);
+        $("#FNA_No").html(jsonFile.opp.FNA_No);
+        $("#Product_Code").html(jsonFile.opp.Product_Code);
+        $("#Created_by_name").html(jsonFile.opp.Created_by_name);
+        $("#Created_by_ID").html(jsonFile.opp.Created_by_ID);
+        $("#Create_date").html(jsonFile.opp.Create_date);
+    }
 </script>
 {% endblock %}
 
@@ -34,22 +67,32 @@
     <p><strong>Staff ID:</strong> {{ current_user.staff_id }}</p>
     <p><strong>Staff Designation:</strong> {{ current_user.staff_designation }}</p>
     <p><strong>Date Appealed:</strong> {{ moment(current_time).format('LLL') }}</p>
+    <div class="input-group mb-3">
+        <input id="crm-app-no" type="text" class="form-control" placeholder="CRM Application Number, e.g. AD123456789">
+        <div class="input-group-append">
+            <button id="verify" type="button" class="btn btn-success">
+                Verify CRM Application No
+            </button>
+        </div>
+    </div>
 
-    <h2>Details required for the application</h2>
+    <div class="card card-body">
+        <p><strong>Customer Name:</strong> <div id="Fullname"></div> </p>
+        <p><strong>Customer IC:</strong> <div id="ID_No"></div> </p>
+        <p><strong>FNA Number:</strong> <div id="FNA_No"></div> </p>
+        <p><strong>Product Name:</strong> <div id="Product_Code"></div> </p>
+
+        <h2>Opportunity created by</h2>
+        <p><strong>Name of Staff:</strong> <div id="Created_by_name"></div> </p>
+        <p><strong>Staff ID:</strong> <div id="Created_by_ID"></div> </p>
+        <p><strong>Date Created in YYYY-MM-DD format:</strong> <div id="Create_date"></div> </p>
+    </div>
+
     <form id="req_form" action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
-        {{ wtf.form_field(form.crm_app_no) }}
-        {{ wtf.form_field(form.fna_no) }}
-
         <!-- All staff ID is automatically generated from staff name, hence is disabled -->
-        <div class="created">
-            <h3>Opportunity created by</h3>
-            {{ wtf.form_field(form.created_by_name) }}
-            {{ wtf.form_field(form.created_by_id, disabled=true) }}
-            {{ wtf.form_field(form.create_date) }}
-        </div>
 
         <div class="closed">
             <h3>Opportunity closed by</h3>
@@ -64,7 +107,6 @@
             {{ wtf.form_field(form.assign_to_id, disabled=true) }}
         </div>
 
-        {{ wtf.form_field(form.pdt_name) }}
         {{ wtf.form_field(form.submit) }}
     </form>
 {% endblock %}
