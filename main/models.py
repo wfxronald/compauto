@@ -39,11 +39,7 @@ class Request(db.Model):
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     crm_app_no = db.Column(db.String(15))
-    fna_no = db.Column(db.String(10))
-
-    created_by_name = db.Column(db.String(120))
-    created_by_id = db.Column(db.String(10))
-    create_date = db.Column(db.DateTime)
+    reason = db.Column(db.String(10))  # Options: 'late', 'forget', 'assign', 'decline', 'unlock', 'other'
 
     closed_by_name = db.Column(db.String(120))
     closed_by_id = db.Column(db.String(10))
@@ -52,13 +48,17 @@ class Request(db.Model):
     assign_to_name = db.Column(db.String(120))
     assign_to_id = db.Column(db.String(10))
 
-    pdt_name = db.Column(db.String(60))
-
     # Storing the approval details of this request
-    is_approved = db.Column(db.Boolean)
-    approved_by_name = db.Column(db.String(120))
-    approved_by_id = db.Column(db.String(120))
-    approve_date = db.Column(db.DateTime)
+    # Two-layered approval: team lead, then sales head
+    is_approved_by_teamlead = db.Column(db.Boolean)
+    approving_teamlead_name = db.Column(db.String(120))
+    approving_teamlead_id = db.Column(db.String(120))
+    teamlead_approve_date = db.Column(db.DateTime)
+
+    is_approved_by_saleshead = db.Column(db.Boolean)
+    approving_saleshead_name = db.Column(db.String(120))
+    approving_saleshead_id = db.Column(db.String(120))
+    saleshead_approve_date = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Request #{}>'.format(self.id)

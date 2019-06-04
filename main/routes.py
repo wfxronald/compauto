@@ -24,6 +24,7 @@ def index():
     def add_empty_name(choices):
         choices.insert(0, ("", "<Please Select>"))  # The empty option is the first option, i.e. default option
 
+    add_empty_name(form.reason.choices)
     add_empty_name(form.closed_by_name.choices)
     add_empty_name(form.assign_to_name.choices)
 
@@ -42,11 +43,7 @@ def index():
                       request_date=current_time,
 
                       crm_app_no=form.crm_app_no.data,
-                      fna_no=form.fna_no.data,
-
-                      created_by_name=form.created_by_name.data,
-                      created_by_id=form.created_by_id.data,
-                      create_date=form.create_date.data,
+                      reason=form.reason.data,
 
                       closed_by_name=form.closed_by_name.data,
                       closed_by_id=form.closed_by_id.data,
@@ -55,18 +52,17 @@ def index():
                       assign_to_name=form.assign_to_name.data,
                       assign_to_id=form.assign_to_id.data,
 
-                      pdt_name=form.pdt_name.data,
-
-                      is_approved=False)
+                      is_approved_by_teamlead=False,
+                      is_approved_by_saleshead=False)
 
         # Use a manual foreign key check rather than one that is ingrained in the database
         foreign_key = form.crm_app_no.data
-        opp_referenced = Opportunity.query.filter_by(crm_app_no=foreign_key).first()
+        opp_referenced = Opportunity.query.filter_by(CRM_Appln_No=foreign_key).first()
         if opp_referenced:
             db.session.add(req)
             db.session.commit()
         else:
-            flash('The CRM Application No you input does not exist in the database')
+            flash('The CRM Application Number you input does not exist in the database')
             return redirect(url_for('index'))
 
         flash("Congratulations, your request has been stored in the database.")
@@ -104,25 +100,20 @@ def login():
 @login_required
 def dashboard():
     form = ApproveForm()
-    requests = Request.query.order_by(Request.is_approved, Request.id)  # Sort by date requested as a form of priority?
+    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id)  # Sort by date requested as a form of priority?
 
     # Declaration of the request table to be presented in HTML form
     class RequestTable(Table):
         classes = ['table', 'table-bordered', 'table-hover']
 
         id = Col('id')
+        crm_app_no = Col('crm_app_no')
+        reason = Col('reason')
 
         requester_name = Col('requester_name')
         requester_id = Col('requester_id')
         requester_designation = Col('requester_designation')
         request_date = Col('request_date')
-
-        crm_app_no = Col('crm_app_no')
-        fna_no = Col('fna_no')
-
-        created_by_name = Col('created_by_name')
-        created_by_id = Col('created_by_id')
-        create_date = Col('create_date')
 
         closed_by_name = Col('closed_by_name')
         closed_by_id = Col('closed_by_id')
@@ -131,16 +122,21 @@ def dashboard():
         assign_to_name = Col('assign_to_name')
         assign_to_id = Col('assign_to_id')
 
-        pdt_name = Col('pdt_name')
+        is_approved_by_teamlead = Col('is_approved_by_teamlead')
+        approving_teamlead_name = Col('approving_teamlead_name')
+        approving_teamlead_id = Col('approving_teamlead_id')
+        teamlead_approve_date = Col('teamlead_approve_date')
 
-        is_approved = Col('is_approved')
-        approved_by_name = Col('approved_by_name')
-        approved_by_id = Col('approved_by_id')
-        approve_date = Col('approve_date')
+        is_approved_by_saleshead = Col('is_approved_by_saleshead')
+        approving_saleshead_name = Col('approving_saleshead_name')
+        approving_saleshead_id = Col('approving_saleshead_id')
+        saleshead_approve_date = Col('saleshead_approve_date')
 
         def get_tr_attrs(self, item):
-            if item.is_approved:
-                return {'class': 'success'}
+            if item.is_approved_by_teamlead and item.is_approved_by_saleshead:
+                return {'class': 'table-success'}
+            elif item.is_approved_by_teamlead:
+                return {'class': 'table-warning'}
             else:
                 return {}
 
@@ -157,41 +153,52 @@ def dashboard():
             flash('The request ID you have input is invalid.')
             return redirect(url_for('dashboard'))
 
-        if req_to_be_approved.is_approved:
-            flash('The request has been approved previously.')
-            return redirect(url_for('dashboard'))
-
         crm_identifier = req_to_be_approved.crm_app_no
         opp_to_be_changed = Opportunity.query.filter_by(CRM_Appln_No=crm_identifier).first()
-        if not opp_to_be_changed:
+
+        if not opp_to_be_changed:  # This problem would have been overcome by the foreign key constraint
             flash('There is no opportunity with the specified CRM Application number.')
             return redirect(url_for('dashboard'))
 
-        # Modify the opportunity database
-        opp_to_be_changed.fna_no = req_to_be_approved.fna_no
-
-        opp_to_be_changed.created_by_name = req_to_be_approved.created_by_name
-        opp_to_be_changed.created_by_id = req_to_be_approved.created_by_id
-        opp_to_be_changed.create_date = req_to_be_approved.create_date
-
-        opp_to_be_changed.closed_by_name = req_to_be_approved.closed_by_name
-        opp_to_be_changed.closed_by_id = req_to_be_approved.closed_by_id
-        opp_to_be_changed.close_date = req_to_be_approved.close_date
-
-        opp_to_be_changed.assign_to_name = req_to_be_approved.assign_to_name
-        opp_to_be_changed.assign_to_id = req_to_be_approved.assign_to_id
-
-        opp_to_be_changed.pdt_name = req_to_be_approved.pdt_name
-
         # Modify the request table to indicate approval
-        req_to_be_approved.is_approved = True
-        req_to_be_approved.approved_by_name = logged_user.staff_name
-        req_to_be_approved.approved_by_id = logged_user.staff_id
-        req_to_be_approved.approve_date = datetime.utcnow()
+        # Two-layered: depends on who is issuing approval
+        role = current_user.staff_designation
 
-        db.session.commit()
+        if role == "Team Lead":
+            if req_to_be_approved.is_approved_by_teamlead and req_to_be_approved.is_approved_by_saleshead:
+                flash('The request has been approved previously. Cannot approve a request twice!')
+                return redirect(url_for('dashboard'))
+            elif req_to_be_approved.is_approved_by_teamlead:
+                flash('The request has been approved by Team Lead previously. Please push your Sales Head to approve.')
+                return redirect(url_for('dashboard'))
 
-        flash('Congratulations, opportunity database has been successfully modified.')
+            # Indicate approval by Team Lead
+            req_to_be_approved.is_approved_by_teamlead = True
+            req_to_be_approved.approving_teamlead_name = current_user.staff_name
+            req_to_be_approved.approving_teamlead_id = current_user.staff_id
+            req_to_be_approved.teamlead_approve_date = datetime.utcnow()
+            flash('You have approved this appeal. Appeal is now pending for Sales Head approval.')
+            db.session.commit()
+
+        elif role == "Sales Head":
+            if not req_to_be_approved.is_approved_by_teamlead:
+                flash('The request has not first been approved by a Team Lead. Please wait for Team Lead\'s approval.')
+                return redirect(url_for('dashboard'))
+            elif req_to_be_approved.is_approved_by_saleshead:
+                flash('The request has been approved previously. Cannot approve a request twice!')
+                return redirect(url_for('dashboard'))
+
+            # Indicate approval by Sales Head
+            req_to_be_approved.is_approved_by_saleshead = True
+            req_to_be_approved.approving_saleshead_name = current_user.staff_name
+            req_to_be_approved.approving_saleshead_id = current_user.staff_id
+            req_to_be_approved.saleshead_approve_date = datetime.utcnow()
+            flash('You have approved this appeal. Opportunity database has been modified.')
+            db.session.commit()
+
+            # Modify the opportunity database
+            # Will depend on the reason!
+
         return redirect(url_for('dashboard'))
     return render_template('dashboard.html', title='Request Dashboard', request_table=request_table, form=form)
 

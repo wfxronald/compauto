@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField, SelectField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField, SelectField, RadioField
 from wtforms.validators import DataRequired
 
 
@@ -11,6 +11,16 @@ class LoginForm(FlaskForm):
 
 
 class MainForm(FlaskForm):
+    crm_app_no = StringField('CRM Application Number', validators=[DataRequired()])
+
+    reason = SelectField('Reason for Appeal', choices=[('late', 'Close late'),
+                                                      ('forget', 'Forget to close'),
+                                                      ('assign', 'Assign wrongly'),
+                                                      ('decline', 'Decline opportunity'),
+                                                      ('unlock', 'Unlock opportunity'),
+                                                      ('other', 'Other issues: manual')],
+                         validators=[DataRequired()])
+
     closed_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
     closed_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
     close_date = DateField('Date Closed in YYYY-MM-DD format', validators=[DataRequired()])
