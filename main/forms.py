@@ -33,3 +33,19 @@ class MainForm(FlaskForm):
 class ApproveForm(FlaskForm):
     req_id = StringField('Enter a valid Request ID to approve', validators=[DataRequired()])  # Must be within length
     submit = SubmitField('Approve')
+
+
+class AccountManagerForm(FlaskForm):
+    operation = SelectField('What would you like to do?', choices=[('add', 'Add a new user'),
+                                                                   ('edit', 'Edit an existing user'),
+                                                                   ('delete', 'Delete an existing user')],
+                            validators=[DataRequired()])
+
+    staff_id = StringField('Staff ID', validators=[DataRequired()])
+    staff_name = StringField('Staff Name', validators=[DataRequired()])
+    staff_designation = StringField('Staff Designation', validators=[DataRequired()])
+    has_permission = SelectField('Permission Level', choices=[('1', '1'),
+                                                              ('0', '0')],
+                                 validators=[DataRequired()])
+
+    submit = SubmitField('Submit')

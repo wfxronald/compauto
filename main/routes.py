@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from main import app, db
-from main.forms import LoginForm, MainForm, ApproveForm
+from main.forms import LoginForm, MainForm, ApproveForm, AccountManagerForm
 from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User, Request, Opportunity
 from werkzeug.urls import url_parse
@@ -321,6 +321,76 @@ def opportunity():
 
     opp_table = OppTable(opp)
     return render_template('opportunity.html', title='Opportunity Database', opp_table=opp_table)
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+@login_required
+def admin():
+    if current_user.staff_designation != "Administrator":
+        flash('You have no permission to access this page.')
+        return redirect(url_for('index'))
+
+    users = User.query.all()
+
+    # Declaration of the request table to be presented in HTML form
+    class UserTable(Table):
+        classes = ['table', 'table-bordered', 'table-hover']
+
+        id = Col('id')
+        staff_id = Col('staff_id')
+        staff_name = Col('staff_name')
+        staff_designation = Col('staff_designation')
+        has_permission = Col('has_permission')
+
+    user_table = UserTable(users)
+
+    # Account manager role:
+    # 1) Can add/edit/delete users - also using csv
+    # 2) Can reset password
+    # 3) Can allocate permission
+    form = AccountManagerForm()
+
+    if form.validate_on_submit():
+        action = form.operation.data
+        if action == "add":
+            to_add = User(staff_id=form.staff_id.data,
+                          staff_name=form.staff_name.data,
+                          staff_designation=form.staff_designation.data,
+                          has_permission=int(form.has_permission.data))
+            db.session.add(to_add)
+            db.session.commit()
+            flash('User successfully added.')
+            return redirect(url_for('admin'))
+
+        elif action == "edit":
+            identifier = form.staff_id.data
+            to_edit = User.query.filter_by(staff_id=identifier).first()
+
+            if not to_edit:
+                flash('There is no such user. Check the staff ID again!')
+                return redirect(url_for('admin'))
+
+            to_edit.staff_name = form.staff_name.data
+            to_edit.staff_designation = form.staff_designation.data
+            to_edit.has_permission = int(form.has_permission.data)
+            db.session.commit()
+            flash('User successfully edited.')
+            return redirect(url_for('admin'))
+
+        elif action == "delete":
+            identifier = form.staff_id.data
+            to_delete = User.query.filter_by(staff_id=identifier).first()
+
+            if not to_delete:
+                flash('There is no such user. Check the staff ID again!')
+                return redirect(url_for('admin'))
+
+            db.session.delete(to_delete)
+            db.session.commit()
+            flash('User successfully deleted.')
+            return redirect(url_for('admin'))
+
+    return render_template('admin.html', title='Account Manager', user_table=user_table, form=form)
 
 
 @app.route('/logout')

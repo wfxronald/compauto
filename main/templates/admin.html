@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import 'bootstrap/form.html' as wtf %}
+
+{% block app_content %}
+    <h1>An admin page that only the account managers can see.</h1>
+    <p>In this page, you can reassign roles and keep track of new accounts</p>
+    <div class="table-responsive">
+        {{ user_table }}
+    </div>
+
+    <div class="card mb-3 bg-light">
+        <h2 class="card-header">User Manager Form</h2>
+        <div class="card-body">
+            {{ wtf.render_form(form) }}
+        </div>
+    </div>
+{% endblock %}
