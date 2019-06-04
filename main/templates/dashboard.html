@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
+{% import 'bootstrap/form.html' as wtf %}
 
 {% block app_content %}
     <h1>A dashboard containing a list of requests for appeal.</h1>
@@ -12,7 +12,7 @@
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens="only") }}
 
-        {{ wtf.form_field(form.req_id) }}
-        {{ wtf.form_field(form.submit) }}
+        {{ wtf.render_field(form.req_id) }}
+        {{ wtf.render_field(form.submit) }}
     </form>
 {% endblock %}
