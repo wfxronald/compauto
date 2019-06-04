@@ -23,7 +23,6 @@ class MainForm(FlaskForm):
 
     closed_by_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
     closed_by_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])
-    close_date = DateField('Date Closed in YYYY-MM-DD format', validators=[DataRequired()])
 
     assign_to_name = SelectField('Name of Staff', coerce=str, validators=[DataRequired()])
     assign_to_id = SelectField('Staff ID', coerce=str, validators=[DataRequired()])

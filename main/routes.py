@@ -47,7 +47,6 @@ def index():
 
                       closed_by_name=form.closed_by_name.data,
                       closed_by_id=form.closed_by_id.data,
-                      close_date=form.close_date.data,
 
                       assign_to_name=form.assign_to_name.data,
                       assign_to_id=form.assign_to_id.data,
@@ -117,7 +116,6 @@ def dashboard():
 
         closed_by_name = Col('closed_by_name')
         closed_by_id = Col('closed_by_id')
-        close_date = Col('close_date')
 
         assign_to_name = Col('assign_to_name')
         assign_to_id = Col('assign_to_id')
@@ -193,11 +191,42 @@ def dashboard():
             req_to_be_approved.approving_saleshead_name = current_user.staff_name
             req_to_be_approved.approving_saleshead_id = current_user.staff_id
             req_to_be_approved.saleshead_approve_date = datetime.utcnow()
+
+            # Modify the opportunity database depending on the reason
+            reason = req_to_be_approved.reason
+            if reason == "late":  # If late, no need to change close date -> just match the opp
+                opp_to_be_changed.Match = "Y"
+
+            elif reason == "forget":  # Match the opp, but also update the close details
+                opp_to_be_changed.Match = "Y"
+                opp_to_be_changed.Close_date = datetime.utcnow()  # Just close it today
+                opp_to_be_changed.Closed_by_ID = req_to_be_approved.closed_by_id
+                opp_to_be_changed.Closed_by_name = req_to_be_approved.closed_by_name
+
+            elif reason == "assign":  # Just change the assign details
+                opp_to_be_changed.Assign_to_ID = req_to_be_approved.assign_to_id
+                opp_to_be_changed.Assign_to_name = req_to_be_approved.assign_to_name
+
+            elif reason == "decline":  # Remove the match, but also update the decline details
+                opp_to_be_changed.Match = None
+                opp_to_be_changed.Match_Amt = None
+                opp_to_be_changed.Match_Dt = None
+                opp_to_be_changed.Acct_No = None
+                opp_to_be_changed.Acct_open_date = None
+
+                opp_to_be_changed.Decline = "Y"
+                opp_to_be_changed.Decline_by_ID = current_user.staff_id  # Details will be that of sales head
+                opp_to_be_changed.Decline_by_name = current_user.staff_name
+                opp_to_be_changed.Decline_date = datetime.utcnow()
+
+            elif reason == "unlock":  # Just need to blank the match
+                opp_to_be_changed.Match = None
+
+            # Else, reason is other: to be handled manually. Do nothing
+
+            # Done modifying the opportunity database
             flash('You have approved this appeal. Opportunity database has been modified.')
             db.session.commit()
-
-            # Modify the opportunity database
-            # Will depend on the reason!
 
         return redirect(url_for('dashboard'))
     return render_template('dashboard.html', title='Request Dashboard', request_table=request_table, form=form)

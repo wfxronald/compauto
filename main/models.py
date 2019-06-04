@@ -43,7 +43,6 @@ class Request(db.Model):
 
     closed_by_name = db.Column(db.String(120))
     closed_by_id = db.Column(db.String(10))
-    close_date = db.Column(db.DateTime)
 
     assign_to_name = db.Column(db.String(120))
     assign_to_id = db.Column(db.String(10))
