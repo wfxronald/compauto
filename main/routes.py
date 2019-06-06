@@ -99,7 +99,19 @@ def login():
 @login_required
 def dashboard():
     form = ApproveForm()
-    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id)  # Sort by date requested as a form of priority?
+    # Only show requests that can be approved by the current user
+    parent_id = current_user.staff_id
+    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id).all()
+    if current_user.parent_node != current_user.staff_id:  # Only admin will fall through this requirement
+        result = []
+        for req in requests:
+            child_id = req.requester_id
+            child_node = User.query.filter_by(staff_id=child_id).first()
+            requester_parent = child_node.parent_node
+            if parent_id == requester_parent:
+                result.append(req)
+        requests.clear()
+        requests.extend(result)
 
     # Declaration of the request table to be presented in HTML form
     class RequestTable(Table):
@@ -141,7 +153,7 @@ def dashboard():
     request_table = RequestTable(requests)
 
     logged_user = User.query.filter_by(id=current_user.id).first()
-    if not logged_user.has_permission:  # Only admin can access the request dashboard
+    if logged_user.permission_lvl == 0:  # Banker cannot see the request dashboard
         flash('You have no permission to access this page.')
         return redirect(url_for('index'))
 
@@ -160,9 +172,9 @@ def dashboard():
 
         # Modify the request table to indicate approval
         # Two-layered: depends on who is issuing approval
-        role = current_user.staff_designation
+        role = current_user.permission_lvl
 
-        if role == "Team Lead":
+        if role == 1:  # Team Lead
             if req_to_be_approved.is_approved_by_teamlead and req_to_be_approved.is_approved_by_saleshead:
                 flash('The request has been approved previously. Cannot approve a request twice!')
                 return redirect(url_for('dashboard'))
@@ -178,7 +190,7 @@ def dashboard():
             flash('You have approved this appeal. Appeal is now pending for Sales Head approval.')
             db.session.commit()
 
-        elif role == "Sales Head":
+        elif role == 2:  # Sales Head
             if not req_to_be_approved.is_approved_by_teamlead:
                 flash('The request has not first been approved by a Team Lead. Please wait for Team Lead\'s approval.')
                 return redirect(url_for('dashboard'))
@@ -326,7 +338,7 @@ def opportunity():
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
-    if current_user.staff_designation != "Administrator":
+    if current_user.permission_lvl < 3:
         flash('You have no permission to access this page.')
         return redirect(url_for('index'))
 
@@ -340,7 +352,8 @@ def admin():
         staff_id = Col('staff_id')
         staff_name = Col('staff_name')
         staff_designation = Col('staff_designation')
-        has_permission = Col('has_permission')
+        permission_lvl = Col('permission_lvl')
+        parent_node = Col('parent_node')
 
     user_table = UserTable(users)
 
@@ -356,8 +369,10 @@ def admin():
             to_add = User(staff_id=form.staff_id.data,
                           staff_name=form.staff_name.data,
                           staff_designation=form.staff_designation.data,
-                          has_permission=int(form.has_permission.data))
+                          permission_lvl=int(form.permission_lvl.data),
+                          parent_node=form.parent_node.data)
             db.session.add(to_add)
+            to_add.set_password('test')  # This is the default password of a newly created account
             db.session.commit()
             flash('User successfully added.')
             return redirect(url_for('admin'))
@@ -372,7 +387,8 @@ def admin():
 
             to_edit.staff_name = form.staff_name.data
             to_edit.staff_designation = form.staff_designation.data
-            to_edit.has_permission = int(form.has_permission.data)
+            to_edit.permission_lvl = int(form.permission_lvl.data)
+            to_edit.parent_node = form.parent_node.data
             db.session.commit()
             flash('User successfully edited.')
             return redirect(url_for('admin'))

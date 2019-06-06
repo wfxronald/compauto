@@ -44,8 +44,11 @@ class AccountManagerForm(FlaskForm):
     staff_id = StringField('Staff ID', validators=[DataRequired()])
     staff_name = StringField('Staff Name', validators=[DataRequired()])
     staff_designation = StringField('Staff Designation', validators=[DataRequired()])
-    has_permission = SelectField('Permission Level', choices=[('1', '1'),
-                                                              ('0', '0')],
+    permission_lvl = SelectField('Permission Level', choices=[('0', '0: Banker'),
+                                                              ('1', '1: Team Lead'),
+                                                              ('2', '2: Sales Head'),
+                                                              ('3', '3: Account Manager')],
                                  validators=[DataRequired()])
+    parent_node = StringField('Parent Node', validators=[DataRequired()])
 
     submit = SubmitField('Submit')

@@ -18,7 +18,8 @@ class User(UserMixin, db.Model):
 
     # More details about the user
     staff_designation = db.Column(db.String(120))
-    has_permission = db.Column(db.Boolean)  # To implement this as a set of numbers showing order of privilege
+    permission_lvl = db.Column(db.Integer)  # 0: Banker, 1: Team Lead, 2: Sales Head, 3: Account Manager
+    parent_node = db.Column(db.String(10))  # Store the ID of the parent node, i.e. Banker -> Team Lead -> Sales Head
 
     def __repr__(self):
         return '<Staff {} with ID {}>'.format(self.staff_name, self.staff_id)
