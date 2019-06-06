@@ -98,19 +98,8 @@ def login():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    # # Only show requests that can be approved by the current user
-    # parent_id = current_user.staff_id
-    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id).all()
-    # if current_user.parent_node != current_user.staff_id:  # Only admin will fall through this requirement
-    #     result = []
-    #     for req in requests:
-    #         child_id = req.requester_id
-    #         child_node = User.query.filter_by(staff_id=child_id).first()
-    #         requester_parent = child_node.parent_node
-    #         if parent_id == requester_parent:
-    #             result.append(req)
-    #     requests.clear()
-    #     requests.extend(result)
+    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id)
+    # Must find a way to show approve button only when the user can approve
 
     # Declaration of the request table to be presented in HTML form
     class LocalTimeCol(Col):
@@ -176,22 +165,21 @@ def approve():
     req_id = request.args.get('id')
 
     req_to_be_approved = Request.query.filter_by(id=req_id).first()
-    if not req_to_be_approved:
-        flash('The request ID you have input is invalid.')
-        return redirect(url_for('dashboard'))
-
     crm_identifier = req_to_be_approved.crm_app_no
     opp_to_be_changed = Opportunity.query.filter_by(CRM_Appln_No=crm_identifier).first()
-
-    if not opp_to_be_changed:  # This problem would have been overcome by the foreign key constraint
-        flash('There is no opportunity with the specified CRM Application number.')
-        return redirect(url_for('dashboard'))
 
     # Modify the request table to indicate approval
     # Two-layered: depends on who is issuing approval
     role = current_user.permission_lvl
 
     if role == 1:  # Team Lead
+        # Check that team lead can only approve banker below him/her
+        child_id = req_to_be_approved.requester_id
+        parent_id = User.query.filter_by(staff_id=child_id).first().parent_node
+        if parent_id != current_user.staff_id:
+            flash('You are not authorised to approve this request. Check again if you are approving the right request!')
+            return redirect(url_for('dashboard'))
+
         if req_to_be_approved.is_approved_by_teamlead and req_to_be_approved.is_approved_by_saleshead:
             flash('The request has been approved previously. Cannot approve a request twice!')
             return redirect(url_for('dashboard'))
@@ -213,6 +201,13 @@ def approve():
             return redirect(url_for('dashboard'))
         elif req_to_be_approved.is_approved_by_saleshead:
             flash('The request has been approved previously. Cannot approve a request twice!')
+            return redirect(url_for('dashboard'))
+
+        # Check that sales head can only approve team lead below him/her
+        child_id = req_to_be_approved.approving_teamlead_id
+        parent_id = User.query.filter_by(staff_id=child_id).first().parent_node
+        if parent_id != current_user.staff_id:
+            flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
         # Indicate approval by Sales Head
@@ -256,6 +251,11 @@ def approve():
         # Done modifying the opportunity database
         flash('You have approved this appeal. Opportunity database has been modified.')
         db.session.commit()
+
+    elif role == 3:  # Account Manager
+        flash('You are not allowed to approve any appeal. Proceed to Account Manager to manage accounts instead.')
+        return redirect(url_for('dashboard'))
+
     return redirect(url_for('dashboard'))
 
 
@@ -350,7 +350,7 @@ def opportunity():
     return render_template('opportunity.html', title='Opportunity Database', opp_table=opp_table)
 
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin', methods=['GET'])
 @login_required
 def admin():
     if current_user.permission_lvl < 3:
@@ -362,6 +362,11 @@ def admin():
     # Declaration of the request table to be presented in HTML form
     class UserTable(Table):
         classes = ['table', 'table-bordered', 'table-hover']
+
+        edit_button = ButtonCol('Edit', 'edit', button_attrs={'class': 'btn btn-primary'},
+                                url_kwargs=dict(staff_id='staff_id'))
+        delete_button = ButtonCol('Delete', 'delete', button_attrs={'class': 'btn btn-danger'},
+                                  url_kwargs=dict(staff_id='staff_id'))
 
         id = Col('id')
         staff_id = Col('staff_id')
@@ -376,11 +381,27 @@ def admin():
     # 1) Can add/edit/delete users - also using csv
     # 2) Can reset password
     # 3) Can allocate permission
-    form = AccountManagerForm()
+    return render_template('admin.html', title='Account Manager', user_table=user_table)
+
+
+@app.route('/edit', methods=['GET', 'POST'])
+@login_required
+def edit():
+    identifier = request.args.get('staff_id')
+
+    if identifier:
+        user_to_edit = User.query.filter_by(staff_id=identifier).first()
+
+        if user_to_edit.permission_lvl == 3:
+            flash('To prevent disaster, you cannot edit an Administrator account')
+            return redirect(url_for('admin'))
+
+        form = AccountManagerForm(obj=user_to_edit)
+    else:
+        form = AccountManagerForm()
 
     if form.validate_on_submit():
-        action = form.operation.data
-        if action == "add":
+        if not identifier:  # This is an add operation
             to_add = User(staff_id=form.staff_id.data,
                           staff_name=form.staff_name.data,
                           staff_designation=form.staff_designation.data,
@@ -388,40 +409,40 @@ def admin():
                           parent_node=form.parent_node.data)
             db.session.add(to_add)
             to_add.set_password('test')  # This is the default password of a newly created account
+
             db.session.commit()
             flash('User successfully added.')
             return redirect(url_for('admin'))
 
-        elif action == "edit":
-            identifier = form.staff_id.data
+        else:
             to_edit = User.query.filter_by(staff_id=identifier).first()
-
-            if not to_edit:
-                flash('There is no such user. Check the staff ID again!')
-                return redirect(url_for('admin'))
 
             to_edit.staff_name = form.staff_name.data
             to_edit.staff_designation = form.staff_designation.data
             to_edit.permission_lvl = int(form.permission_lvl.data)
             to_edit.parent_node = form.parent_node.data
+
             db.session.commit()
             flash('User successfully edited.')
             return redirect(url_for('admin'))
 
-        elif action == "delete":
-            identifier = form.staff_id.data
-            to_delete = User.query.filter_by(staff_id=identifier).first()
+    return render_template('edit.html', title='User Manager', form=form)
 
-            if not to_delete:
-                flash('There is no such user. Check the staff ID again!')
-                return redirect(url_for('admin'))
 
-            db.session.delete(to_delete)
-            db.session.commit()
-            flash('User successfully deleted.')
-            return redirect(url_for('admin'))
+@app.route('/delete', methods=['POST'])
+@login_required
+def delete():
+    identifier = request.args.get('staff_id')
+    to_delete = User.query.filter_by(staff_id=identifier).first()
 
-    return render_template('admin.html', title='Account Manager', user_table=user_table, form=form)
+    if to_delete.permission_lvl == 3:
+        flash('To prevent disaster, you cannot delete an Administrator account')
+        return redirect(url_for('admin'))
+
+    db.session.delete(to_delete)
+    db.session.commit()
+    flash('User successfully deleted.')
+    return redirect(url_for('admin'))
 
 
 @app.route('/logout')

@@ -8,10 +8,5 @@
         {{ user_table }}
     </div>
 
-    <div class="card mb-3 bg-light">
-        <h2 class="card-header">User Manager Form</h2>
-        <div class="card-body">
-            {{ wtf.render_form(form) }}
-        </div>
-    </div>
+    <a href="{{ url_for('edit') }}" class="btn btn-success">Add a new user</a>
 {% endblock %}

@@ -31,18 +31,12 @@ class MainForm(FlaskForm):
 
 
 class AccountManagerForm(FlaskForm):
-    operation = SelectField('What would you like to do?', choices=[('add', 'Add a new user'),
-                                                                   ('edit', 'Edit an existing user'),
-                                                                   ('delete', 'Delete an existing user')],
-                            validators=[DataRequired()])
-
     staff_id = StringField('Staff ID', validators=[DataRequired()])
     staff_name = StringField('Staff Name', validators=[DataRequired()])
     staff_designation = StringField('Staff Designation', validators=[DataRequired()])
     permission_lvl = SelectField('Permission Level', choices=[('0', '0: Banker'),
                                                               ('1', '1: Team Lead'),
-                                                              ('2', '2: Sales Head'),
-                                                              ('3', '3: Account Manager')],
+                                                              ('2', '2: Sales Head')],
                                  validators=[DataRequired()])
     parent_node = StringField('Parent Node', validators=[DataRequired()])
 
