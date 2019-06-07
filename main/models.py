@@ -38,7 +38,7 @@ class Request(db.Model):
 
     requester_name = db.Column(db.String(120))
     requester_id = db.Column(db.String(10))
-    requester_designation = db.Column(db.String(10))
+    requester_designation = db.Column(db.String(10))  # Only banker can raise the request
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     crm_app_no = db.Column(db.String(15))
@@ -50,12 +50,16 @@ class Request(db.Model):
     assign_to_name = db.Column(db.String(120))
     assign_to_id = db.Column(db.String(10))
 
-    # Storing the approval details of this request
-    # Three-layered approval: team lead, then sales head
+    # Layered approval: team lead -> team manager -> sales head
     is_approved_by_teamlead = db.Column(db.Boolean)
     approving_teamlead_name = db.Column(db.String(120))
     approving_teamlead_id = db.Column(db.String(120))
     teamlead_approve_date = db.Column(db.DateTime)
+
+    is_approved_by_teammanager = db.Column(db.Boolean)
+    approving_teammanager_name = db.Column(db.String(120))
+    approving_teammanager_id = db.Column(db.String(120))
+    teammanager_approve_date = db.Column(db.DateTime)
 
     is_approved_by_saleshead = db.Column(db.Boolean)
     approving_saleshead_name = db.Column(db.String(120))

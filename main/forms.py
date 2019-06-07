@@ -36,7 +36,8 @@ class AccountManagerForm(FlaskForm):
     staff_designation = StringField('Staff Designation', validators=[DataRequired()])
     permission_lvl = SelectField('Permission Level', choices=[('0', '0: Banker'),
                                                               ('1', '1: Team Lead'),
-                                                              ('2', '2: Sales Head')],
+                                                              ('2', '2: Team Manager'),
+                                                              ('3', '3: Sales Head')],
                                  validators=[DataRequired()])
     team = StringField('Team', validators=[DataRequired()])
 

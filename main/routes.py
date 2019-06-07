@@ -52,6 +52,7 @@ def index():
                       assign_to_id=form.assign_to_id.data,
 
                       is_approved_by_teamlead=False,
+                      is_approved_by_teammanager=False,
                       is_approved_by_saleshead=False)
 
         # Use a manual foreign key check rather than one that is ingrained in the database
@@ -98,7 +99,11 @@ def login():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    requests = Request.query.order_by(Request.is_approved_by_teamlead, Request.is_approved_by_saleshead, Request.id)
+    requests = Request.query.order_by(Request.is_approved_by_teamlead,
+                                      Request.is_approved_by_teammanager,
+                                      Request.is_approved_by_saleshead,
+                                      Request.request_date)  # Sort by date to prioritise by urgency -> oldest on top
+
     # Must find a way to show approve button only when the user can approve
 
     # Declaration of the request table to be presented in HTML form
@@ -136,16 +141,23 @@ def dashboard():
         approving_teamlead_id = Col('approving_teamlead_id')
         teamlead_approve_date = LocalTimeCol('teamlead_approve_date')
 
+        is_approved_by_teammanager = Col('is_approved_by_teammanager')
+        approving_teammanager_name = Col('approving_teammanager_name')
+        approving_teammanager_id = Col('approving_teammanager_id')
+        teammanager_approve_date = LocalTimeCol('teammanager_approve_date')
+
         is_approved_by_saleshead = Col('is_approved_by_saleshead')
         approving_saleshead_name = Col('approving_saleshead_name')
         approving_saleshead_id = Col('approving_saleshead_id')
         saleshead_approve_date = LocalTimeCol('saleshead_approve_date')
 
         def get_tr_attrs(self, item):
-            if item.is_approved_by_teamlead and item.is_approved_by_saleshead:
+            if item.is_approved_by_saleshead:
                 return {'class': 'table-success'}
-            elif item.is_approved_by_teamlead:
+            elif item.is_approved_by_teammanager:
                 return {'class': 'table-warning'}
+            elif item.is_approved_by_teamlead:
+                return {'class': 'table-info'}
             else:
                 return {}
 
@@ -170,25 +182,23 @@ def approve():
 
     def can_approve(req_to_be_approved):
         user_team = current_user.team
-        need_teamlead_approval = not req_to_be_approved.is_approved_by_teamlead
-        if need_teamlead_approval:
+        if not req_to_be_approved.is_approved_by_teamlead:
             requester_team = User.query.filter_by(staff_id=req_to_be_approved.requester_id).first().team
-        else:
+        elif not req_to_be_approved.is_approved_by_teammanager:
             requester_team = User.query.filter_by(staff_id=req_to_be_approved.approving_teamlead_id).first().team
+        else:  # Waiting to be approved by sales head, or already fully approved
+            requester_team = User.query.filter_by(staff_id=req_to_be_approved.approving_teammanager_id).first().team
         approver_team = Team.query.filter_by(from_team=requester_team).first().to_team
 
         return user_team == approver_team
 
     # Modify the request table to indicate approval
-    # Two-layered: depends on who is issuing approval
-    role = current_user.permission_lvl
+    # Currently hard-coded since the flow is likely to be fixed
+    role = current_user.staff_designation
 
-    if role == 1:  # Team Lead
-        if req_to_be_approved.is_approved_by_teamlead and req_to_be_approved.is_approved_by_saleshead:
-            flash('The request has been approved previously. Cannot approve a request twice!')
-            return redirect(url_for('dashboard'))
-        elif req_to_be_approved.is_approved_by_teamlead:
-            flash('The request has been approved by Team Lead previously. Please push your Sales Head to approve.')
+    if role == 'Team Lead':
+        if req_to_be_approved.is_approved_by_teamlead:
+            flash('The request has been approved by Team Lead previously. Please push your Team Manager to approve.')
             return redirect(url_for('dashboard'))
 
         # Check that team lead can only approve banker below him/her
@@ -201,18 +211,42 @@ def approve():
         req_to_be_approved.approving_teamlead_name = current_user.staff_name
         req_to_be_approved.approving_teamlead_id = current_user.staff_id
         req_to_be_approved.teamlead_approve_date = datetime.utcnow()
+        flash('You have approved this appeal. Appeal is now pending for Team Manager approval.')
+        db.session.commit()
+
+    elif role == 'Team Manager':
+        if not req_to_be_approved.is_approved_by_teamlead:
+            flash('The request has not been approved by a Team Lead. Please wait for Team Lead\'s approval.')
+            return redirect(url_for('dashboard'))
+        elif req_to_be_approved.is_approved_by_teammanager:
+            flash('The request has been approved by Team Manager previously. Please push your Sales Head to approve.')
+            return redirect(url_for('dashboard'))
+
+        # Check that team manager can only approve team lead below him/her
+        if not can_approve(req_to_be_approved):
+            flash('You are not authorised to approve this request. Check again if you are approving the right request!')
+            return redirect(url_for('dashboard'))
+
+        # Indicate approval by Team Manager
+        req_to_be_approved.is_approved_by_teammanager = True
+        req_to_be_approved.approving_teammanager_name = current_user.staff_name
+        req_to_be_approved.approving_teammanager_id = current_user.staff_id
+        req_to_be_approved.teammanager_approve_date = datetime.utcnow()
         flash('You have approved this appeal. Appeal is now pending for Sales Head approval.')
         db.session.commit()
 
-    elif role == 2:  # Sales Head
+    elif role == 'Sales Head':
         if not req_to_be_approved.is_approved_by_teamlead:
-            flash('The request has not first been approved by a Team Lead. Please wait for Team Lead\'s approval.')
+            flash('The request has not been approved by a Team Lead. Please wait for Team Lead\'s approval.')
+            return redirect(url_for('dashboard'))
+        elif not req_to_be_approved.is_approved_by_teammanager:
+            flash('The request has not been approved by a Team Manager. Please wait for Team Manager\'s approval.')
             return redirect(url_for('dashboard'))
         elif req_to_be_approved.is_approved_by_saleshead:
-            flash('The request has been approved previously. Cannot approve a request twice!')
+            flash('The request has been approved before. Cannot approve a request twice!')
             return redirect(url_for('dashboard'))
 
-        # Check that sales head can only approve team lead below him/her
+        # Check that sales head can only approve team manager below him/her
         if not can_approve(req_to_be_approved):
             flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
@@ -259,7 +293,7 @@ def approve():
         flash('You have approved this appeal. Opportunity database has been modified.')
         db.session.commit()
 
-    elif role == 3:  # Account Manager
+    elif role == 'Account Manager':
         flash('You are not allowed to approve any appeal. Proceed to Account Manager to manage accounts instead.')
         return redirect(url_for('dashboard'))
 
