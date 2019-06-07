@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import 'bootstrap/form.html' as wtf %}
+
+{% block app_content %}
+    <h1>Add a new relationship.</h1>
+    <p>Fill up the form below to add a new relationship.</p>
+
+    <div class="card mb-3 bg-light">
+        <h2 class="card-header">Add Relationship Form</h2>
+        <div class="card-body">
+            {{ wtf.render_form(form) }}
+        </div>
+    </div>
+{% endblock %}

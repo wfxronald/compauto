@@ -6,20 +6,22 @@ from datetime import datetime
 
 
 @login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+def load_user(staff_id):
+    return User.query.filter_by(staff_id=staff_id).first()
 
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # This ID is a running number index
-    staff_id = db.Column(db.String(10), index=True, unique=True)  # Staff ID will be the username
+    staff_id = db.Column(db.String(10), primary_key=True, index=True, unique=True)
     staff_name = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
 
     # More details about the user
     staff_designation = db.Column(db.String(120))
     permission_lvl = db.Column(db.Integer)  # 0: Banker, 1: Team Lead, 2: Sales Head, 3: Account Manager
-    parent_node = db.Column(db.String(10))  # Store the ID of the parent node, i.e. Banker -> Team Lead -> Sales Head
+    team = db.Column(db.String(30))
+
+    def get_id(self):
+        return self.staff_id
 
     def __repr__(self):
         return '<Staff {} with ID {}>'.format(self.staff_name, self.staff_id)
@@ -49,7 +51,7 @@ class Request(db.Model):
     assign_to_id = db.Column(db.String(10))
 
     # Storing the approval details of this request
-    # Two-layered approval: team lead, then sales head
+    # Three-layered approval: team lead, then sales head
     is_approved_by_teamlead = db.Column(db.Boolean)
     approving_teamlead_name = db.Column(db.String(120))
     approving_teamlead_id = db.Column(db.String(120))
@@ -145,3 +147,21 @@ class Opportunity(db.Model):
 
     def __repr__(self):
         return '<Opportunity #{}>'.format(self.CRM_Appln_No)
+
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    from_role = db.Column(db.String(30))
+    to_role = db.Column(db.String(30))
+
+    def __repr__(self):
+        return '<Relationship from {} to {}>'.format(self.from_role, self.to_role)
+
+
+class Team(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    from_team = db.Column(db.String(30))
+    to_team = db.Column(db.String(30))
+
+    def __repr__(self):
+        return '<Team {} reports to team {}>'.format(self.from_team, self.to_team)

@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from main import app, db
-from main.forms import LoginForm, MainForm, AccountManagerForm
+from main.forms import LoginForm, MainForm, AccountManagerForm, RelationshipForm
 from flask_login import current_user, login_user, logout_user, login_required
-from main.models import User, Request, Opportunity
+from main.models import User, Request, Opportunity, Role, Team
 from werkzeug.urls import url_parse
 from datetime import datetime, timezone
 from flask_table import Table, Col, ButtonCol
@@ -106,7 +106,7 @@ def dashboard():
         def td_format(self, content):
             if content:
                 adjust_timezone = content.replace(tzinfo=timezone.utc).astimezone(tz=None)
-                return adjust_timezone.strftime("%d %b %Y %H:%S")
+                return adjust_timezone.strftime("%d %b %Y %H:%M:%S")
             else:
                 return ''
 
@@ -151,7 +151,7 @@ def dashboard():
 
     request_table = RequestTable(requests)
 
-    logged_user = User.query.filter_by(id=current_user.id).first()
+    logged_user = User.query.filter_by(staff_id=current_user.staff_id).first()
     if logged_user.permission_lvl == 0:  # Banker cannot see the request dashboard
         flash('You have no permission to access this page.')
         return redirect(url_for('index'))
@@ -168,23 +168,32 @@ def approve():
     crm_identifier = req_to_be_approved.crm_app_no
     opp_to_be_changed = Opportunity.query.filter_by(CRM_Appln_No=crm_identifier).first()
 
+    def can_approve(req_to_be_approved):
+        user_team = current_user.team
+        need_teamlead_approval = not req_to_be_approved.is_approved_by_teamlead
+        if need_teamlead_approval:
+            requester_team = User.query.filter_by(staff_id=req_to_be_approved.requester_id).first().team
+        else:
+            requester_team = User.query.filter_by(staff_id=req_to_be_approved.approving_teamlead_id).first().team
+        approver_team = Team.query.filter_by(from_team=requester_team).first().to_team
+
+        return user_team == approver_team
+
     # Modify the request table to indicate approval
     # Two-layered: depends on who is issuing approval
     role = current_user.permission_lvl
 
     if role == 1:  # Team Lead
-        # Check that team lead can only approve banker below him/her
-        child_id = req_to_be_approved.requester_id
-        parent_id = User.query.filter_by(staff_id=child_id).first().parent_node
-        if parent_id != current_user.staff_id:
-            flash('You are not authorised to approve this request. Check again if you are approving the right request!')
-            return redirect(url_for('dashboard'))
-
         if req_to_be_approved.is_approved_by_teamlead and req_to_be_approved.is_approved_by_saleshead:
             flash('The request has been approved previously. Cannot approve a request twice!')
             return redirect(url_for('dashboard'))
         elif req_to_be_approved.is_approved_by_teamlead:
             flash('The request has been approved by Team Lead previously. Please push your Sales Head to approve.')
+            return redirect(url_for('dashboard'))
+
+        # Check that team lead can only approve banker below him/her
+        if not can_approve(req_to_be_approved):
+            flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
         # Indicate approval by Team Lead
@@ -204,9 +213,7 @@ def approve():
             return redirect(url_for('dashboard'))
 
         # Check that sales head can only approve team lead below him/her
-        child_id = req_to_be_approved.approving_teamlead_id
-        parent_id = User.query.filter_by(staff_id=child_id).first().parent_node
-        if parent_id != current_user.staff_id:
+        if not can_approve(req_to_be_approved):
             flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
@@ -358,6 +365,8 @@ def admin():
         return redirect(url_for('index'))
 
     users = User.query.all()
+    roles = Role.query.all()
+    teams = Team.query.all()
 
     # Declaration of the request table to be presented in HTML form
     class UserTable(Table):
@@ -368,20 +377,30 @@ def admin():
         delete_button = ButtonCol('Delete', 'delete', button_attrs={'class': 'btn btn-danger'},
                                   url_kwargs=dict(staff_id='staff_id'))
 
-        id = Col('id')
         staff_id = Col('staff_id')
         staff_name = Col('staff_name')
         staff_designation = Col('staff_designation')
         permission_lvl = Col('permission_lvl')
-        parent_node = Col('parent_node')
+        team = Col('team')
+
+    class RoleTable(Table):
+        classes = ['table', 'table-bordered', 'table-hover']
+
+        from_role = Col('from_role')
+        to_role = Col('to_role')
+
+    class TeamTable(Table):
+        classes = ['table', 'table-bordered', 'table-hover']
+
+        from_team = Col('from_team')
+        to_team = Col('to_team')
 
     user_table = UserTable(users)
+    role_table = RoleTable(roles)
+    team_table = TeamTable(teams)
 
-    # Account manager role:
-    # 1) Can add/edit/delete users - also using csv
-    # 2) Can reset password
-    # 3) Can allocate permission
-    return render_template('admin.html', title='Account Manager', user_table=user_table)
+    return render_template('admin.html', title='Account Manager',
+                           user_table=user_table, role_table=role_table, team_table=team_table)
 
 
 @app.route('/edit', methods=['GET', 'POST'])
@@ -406,7 +425,7 @@ def edit():
                           staff_name=form.staff_name.data,
                           staff_designation=form.staff_designation.data,
                           permission_lvl=int(form.permission_lvl.data),
-                          parent_node=form.parent_node.data)
+                          team=form.team.data)
             db.session.add(to_add)
             to_add.set_password('test')  # This is the default password of a newly created account
 
@@ -420,7 +439,7 @@ def edit():
             to_edit.staff_name = form.staff_name.data
             to_edit.staff_designation = form.staff_designation.data
             to_edit.permission_lvl = int(form.permission_lvl.data)
-            to_edit.parent_node = form.parent_node.data
+            to_edit.team = form.team.data
 
             db.session.commit()
             flash('User successfully edited.')
@@ -443,6 +462,26 @@ def delete():
     db.session.commit()
     flash('User successfully deleted.')
     return redirect(url_for('admin'))
+
+
+@app.route('/define', methods=['GET', 'POST'])
+def define():
+    form = RelationshipForm()
+
+    if form.validate_on_submit():
+        target = form.table_to_add.data
+
+        if target == 'Role':
+            to_add = Role(from_role=form.begin.data, to_role=form.end.data)
+        elif target == 'Team':
+            to_add = Team(from_team=form.begin.data, to_team=form.end.data)
+
+        db.session.add(to_add)
+        db.session.commit()
+        flash('Relationship successfully added.')
+        return redirect(url_for('admin'))
+
+    return render_template('define.html', title='Relationship Manager', form=form)
 
 
 @app.route('/logout')

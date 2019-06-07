@@ -38,6 +38,16 @@ class AccountManagerForm(FlaskForm):
                                                               ('1', '1: Team Lead'),
                                                               ('2', '2: Sales Head')],
                                  validators=[DataRequired()])
-    parent_node = StringField('Parent Node', validators=[DataRequired()])
+    team = StringField('Team', validators=[DataRequired()])
 
     submit = SubmitField('Submit')
+
+
+class RelationshipForm(FlaskForm):
+    begin = StringField('Relationship begins from', validators=[DataRequired()])
+    end = StringField('Relationship ends at', validators=[DataRequired()])
+    table_to_add = SelectField('Add this relationship to', choices=[('Role', 'Role Table'),
+                                                                    ('Team', 'Team Table')],
+                               validators=[DataRequired()])
+
+    submit = SubmitField('Add')
