@@ -47,8 +47,5 @@ class AccountManagerForm(FlaskForm):
 class RelationshipForm(FlaskForm):
     begin = StringField('Relationship begins from', validators=[DataRequired()])
     end = StringField('Relationship ends at', validators=[DataRequired()])
-    table_to_add = SelectField('Add this relationship to', choices=[('Role', 'Role Table'),
-                                                                    ('Team', 'Team Table')],
-                               validators=[DataRequired()])
 
-    submit = SubmitField('Add')
+    submit = SubmitField('Submit')

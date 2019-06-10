@@ -153,15 +153,6 @@ class Opportunity(db.Model):
         return '<Opportunity #{}>'.format(self.CRM_Appln_No)
 
 
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    from_role = db.Column(db.String(30))
-    to_role = db.Column(db.String(30))
-
-    def __repr__(self):
-        return '<Relationship from {} to {}>'.format(self.from_role, self.to_role)
-
-
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     from_team = db.Column(db.String(30))

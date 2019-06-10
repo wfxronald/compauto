@@ -4,13 +4,21 @@
 {% block app_content %}
     <h1>An admin page that only the account managers can see.</h1>
     <p>In this page, you can reassign roles and keep track of new accounts</p>
+
+    <h2>Users List</h2>
+    <p>View a list of existing users here. Add, edit or delete users freely!</p>
     <div class="table-responsive">
         {{ user_table }}
     </div>
+    <a href="{{ url_for('edit') }}" class="btn btn-success">Add a new user</a>
+
+    <h2>Relationships List</h2>
+    <p>
+        View a list of relationships: only people in to_team can approve the corresponding from_team's request.
+        Add, edit or delete relationships freely!
+    </p>
     <div class="table-responsive">
-        {{ role_table }}
         {{ team_table }}
     </div>
-    <a href="{{ url_for('edit') }}" class="btn btn-success">Add a new user</a>
     <a href="{{ url_for('define') }}" class="btn btn-success">Add a new relationship</a>
 {% endblock %}

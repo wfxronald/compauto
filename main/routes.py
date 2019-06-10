@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from main import app, db
 from main.forms import LoginForm, MainForm, AccountManagerForm, RelationshipForm
 from flask_login import current_user, login_user, logout_user, login_required
-from main.models import User, Request, Opportunity, Role, Team
+from main.models import User, Request, Opportunity, Team
 from werkzeug.urls import url_parse
 from datetime import datetime, timezone
 from flask_table import Table, Col, ButtonCol
@@ -399,7 +399,6 @@ def admin():
         return redirect(url_for('index'))
 
     users = User.query.all()
-    roles = Role.query.all()
     teams = Team.query.all()
 
     # Declaration of the request table to be presented in HTML form
@@ -417,24 +416,22 @@ def admin():
         permission_lvl = Col('permission_lvl')
         team = Col('team')
 
-    class RoleTable(Table):
-        classes = ['table', 'table-bordered', 'table-hover']
-
-        from_role = Col('from_role')
-        to_role = Col('to_role')
-
     class TeamTable(Table):
         classes = ['table', 'table-bordered', 'table-hover']
 
+        edit_button = ButtonCol('Edit', 'define', button_attrs={'class': 'btn btn-primary'},
+                                url_kwargs=dict(id='id'))
+        delete_button = ButtonCol('Delete', 'clear', button_attrs={'class': 'btn btn-danger'},
+                                  url_kwargs=dict(id='id'))
+
+        id = Col('id')
         from_team = Col('from_team')
         to_team = Col('to_team')
 
     user_table = UserTable(users)
-    role_table = RoleTable(roles)
     team_table = TeamTable(teams)
 
-    return render_template('admin.html', title='Account Manager',
-                           user_table=user_table, role_table=role_table, team_table=team_table)
+    return render_template('admin.html', title='Account Manager', user_table=user_table, team_table=team_table)
 
 
 @app.route('/edit', methods=['GET', 'POST'])
@@ -498,22 +495,42 @@ def delete():
     return redirect(url_for('admin'))
 
 
+@app.route('/clear', methods=['POST'])
+@login_required
+def clear():
+    identifier = request.args.get('id')
+    to_delete = Team.query.filter_by(id=identifier).first()
+    db.session.delete(to_delete)
+    db.session.commit()
+    flash('Relationship successfully deleted.')
+    return redirect(url_for('admin'))
+
+
 @app.route('/define', methods=['GET', 'POST'])
 def define():
-    form = RelationshipForm()
+    identifier = request.args.get('id')
+
+    if identifier:
+        form = RelationshipForm(begin=Team.query.filter_by(id=identifier).first().from_team,
+                                end=Team.query.filter_by(id=identifier).first().to_team)
+    else:
+        form = RelationshipForm()
 
     if form.validate_on_submit():
-        target = form.table_to_add.data
-
-        if target == 'Role':
-            to_add = Role(from_role=form.begin.data, to_role=form.end.data)
-        elif target == 'Team':
+        if not identifier:  # This is an add operation
             to_add = Team(from_team=form.begin.data, to_team=form.end.data)
+            db.session.add(to_add)
+            db.session.commit()
+            flash('Relationship successfully added.')
+            return redirect(url_for('admin'))
 
-        db.session.add(to_add)
-        db.session.commit()
-        flash('Relationship successfully added.')
-        return redirect(url_for('admin'))
+        else:  # This is an edit operation
+            to_edit = Team.query.filter_by(id=identifier).first()
+            to_edit.from_team = form.begin.data
+            to_edit.to_team = form.end.data
+            db.session.commit()
+            flash('Relationship successfully edited.')
+            return redirect(url_for('admin'))
 
     return render_template('define.html', title='Relationship Manager', form=form)
 
