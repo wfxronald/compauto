@@ -442,7 +442,7 @@ def edit():
     if identifier:
         user_to_edit = User.query.filter_by(staff_id=identifier).first()
 
-        if user_to_edit.permission_lvl == 3:
+        if user_to_edit.permission_lvl == 4:
             flash('To prevent disaster, you cannot edit an Administrator account')
             return redirect(url_for('admin'))
 
@@ -485,7 +485,7 @@ def delete():
     identifier = request.args.get('staff_id')
     to_delete = User.query.filter_by(staff_id=identifier).first()
 
-    if to_delete.permission_lvl == 3:
+    if to_delete.permission_lvl == 4:
         flash('To prevent disaster, you cannot delete an Administrator account')
         return redirect(url_for('admin'))
 
