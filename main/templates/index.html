@@ -4,6 +4,14 @@
 {% block scripts %}
 {{ super() }}
 <script>
+    // Show updated time in the page without refreshing
+    function update() {
+        $("#showtime").html(moment().format('dddd, DD MMM YYYY, HH:mm:ss'));
+        setTimeout(update, 500);
+    }
+
+    $(document).ready(update);
+
     // A function to bind the staff name and staff id
     function changeIdWhenNameChanges(name, id) {
         var elemName = document.getElementById(name);
@@ -73,7 +81,8 @@
             <p><strong>Name of Staff:</strong> {{ current_user.staff_name }}</p>
             <p><strong>Staff ID:</strong> {{ current_user.staff_id }}</p>
             <p><strong>Staff Designation:</strong> {{ current_user.staff_designation }}</p>
-            <p><strong>Date Appealed:</strong> {{ moment(current_time).format('LLL') }}</p>
+            <p><strong>Team:</strong> {{ current_user.team }}</p>
+            <p><strong>Current Time:</strong> <span id="showtime"></span></p>
         </div>
     </div>
 

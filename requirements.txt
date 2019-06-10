@@ -4,4 +4,5 @@ flask_sqlalchemy
 flask_migrate
 flask_login
 flask_table
-bootstrap_flask
+flask_bootstrap
+flask_moment
