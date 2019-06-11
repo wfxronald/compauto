@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError
 from main.models import User, Team, Opportunity
+from flask_login import current_user
 
 
 class LoginForm(FlaskForm):
@@ -65,6 +66,26 @@ class RelationshipForm(FlaskForm):
         if Team.query.filter_by(from_team=self.begin.data, to_team=self.end.data).first():
             self.begin.errors.append('Such relationship already exists in the database.')
             self.end.errors.append('Such relationship already exists in the database.')
+            return False
+
+        return True
+
+    submit = SubmitField('Submit')
+
+
+class ChangePasswordForm(FlaskForm):
+    old_pass = PasswordField('Old Password', validators=[DataRequired()])
+    new_pass = PasswordField('New Password', validators=[DataRequired()])
+    repeat_new_pass = PasswordField('Repeat New Password', validators=[DataRequired()])
+
+    def validate(self):
+        if not FlaskForm.validate(self):
+            return False
+
+        if self.new_pass.data != self.repeat_new_pass.data or not current_user.check_password(self.old_pass.data):
+            self.old_pass.errors.append('Old password is incorrect or new passwords do not match!')
+            self.new_pass.errors.append('Old password is incorrect or new passwords do not match!')
+            self.repeat_new_pass.errors.append('Old password is incorrect or new passwords do not match!')
             return False
 
         return True

@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from main import app, db
-from main.forms import LoginForm, MainForm, AccountManagerForm, RelationshipForm
+from main.forms import LoginForm, MainForm, AccountManagerForm, RelationshipForm, ChangePasswordForm
 from flask_login import current_user, login_user, logout_user, login_required
 from main.models import User, Request, Opportunity, Team
 from werkzeug.urls import url_parse
@@ -414,6 +414,8 @@ def admin():
                                 url_kwargs=dict(staff_id='staff_id'))
         delete_button = ButtonCol('Delete', 'delete', button_attrs={'class': 'btn btn-danger'},
                                   url_kwargs=dict(staff_id='staff_id'))
+        reset_button = ButtonCol('Reset Password', 'reset', button_attrs={'class': 'btn btn-warning'},
+                                 url_kwargs=dict(staff_id='staff_id'))
 
         staff_id = Col('staff_id')
         staff_name = Col('staff_name')
@@ -501,6 +503,22 @@ def delete():
     return redirect(url_for('admin'))
 
 
+@app.route('/reset', methods=['POST'])
+@login_required
+def reset():
+    identifier = request.args.get('staff_id')
+    to_reset = User.query.filter_by(staff_id=identifier).first()
+
+    if to_reset.permission_lvl == 4:
+        flash('To prevent disaster, you cannot reset the password of an Administrator account')
+        return redirect(url_for('admin'))
+
+    to_reset.set_password('test')  # Back to our default password
+    db.session.commit()
+    flash('Password successfully reset.')
+    return redirect(url_for('admin'))
+
+
 @app.route('/clear', methods=['POST'])
 @login_required
 def clear():
@@ -559,6 +577,20 @@ def receiver():
     opp_serialized = selected_opp.__dict__
     opp_serialized.pop('_sa_instance_state')  # Remove the non-relevant key in the resulting dictionary
     return jsonify({"opp": opp_serialized, "success": True})
+
+
+@app.route('/change', methods=['GET', 'POST'])
+@login_required
+def change():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        current_user.set_password(form.new_pass.data)
+        db.session.commit()
+        flash('Password successfully changed.')
+        return redirect(url_for('change'))
+
+    return render_template('change.html', title='Change Password', form=form)
 
 
 @app.route('/help')
