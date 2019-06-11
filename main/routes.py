@@ -55,16 +55,8 @@ def index():
                       is_approved_by_teammanager=False,
                       is_approved_by_saleshead=False)
 
-        # Use a manual foreign key check rather than one that is ingrained in the database
-        foreign_key = form.crm_app_no.data
-        opp_referenced = Opportunity.query.filter_by(CRM_Appln_No=foreign_key).first()
-        if opp_referenced:
-            db.session.add(req)
-            db.session.commit()
-        else:
-            flash('The CRM Application Number you input does not exist in the database')
-            return redirect(url_for('index'))
-
+        db.session.add(req)
+        db.session.commit()
         flash("Congratulations, your request has been stored in the database.")
         return redirect(url_for('index'))
 
@@ -104,7 +96,7 @@ def dashboard():
                                       Request.is_approved_by_saleshead,
                                       Request.request_date)  # Sort by date to prioritise by urgency -> oldest on top
 
-    # Must find a way to show approve button only when the user can approve
+    # TODO: Must find a way to show approve button only when the user can approve
 
     # Declaration of the request table to be presented in HTML form
     class LocalTimeCol(Col):
@@ -411,8 +403,8 @@ def admin():
         flash('You have no permission to access this page.')
         return redirect(url_for('index'))
 
-    users = User.query.all()
-    teams = Team.query.all()
+    users = User.query.order_by('staff_id')
+    teams = Team.query.order_by('id')
 
     # Declaration of the request table to be presented in HTML form
     class UserTable(Table):
@@ -460,6 +452,7 @@ def edit():
             return redirect(url_for('admin'))
 
         form = AccountManagerForm(obj=user_to_edit)
+        del form.staff_id  # Cannot edit a staff ID
     else:
         form = AccountManagerForm()
 

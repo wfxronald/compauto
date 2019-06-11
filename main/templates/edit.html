@@ -8,7 +8,7 @@
     <div class="card mb-3 bg-light">
         <h2 class="card-header">Add or Edit User Form</h2>
         <div class="card-body">
-            {{ wtf.render_form(form) }}
+            {{ wtf.render_form(form, button_map={'submit': 'success'}) }}
         </div>
     </div>
 {% endblock %}

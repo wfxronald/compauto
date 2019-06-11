@@ -74,7 +74,13 @@
     <div class="card bg-light mb-3">
         <div class="card-header">
             <h2>Automatically Generated Details</h2>
-            <p class="card-subtitle mb-2 text-muted">Do check that these details are correct. Otherwise, contact your administrator!</p>
+            <p class="card-subtitle mb-2 text-muted">
+                {% if current_user.permission_lvl < 4 %}
+                Do check that these details are correct. Otherwise, contact your administrator!
+                {% else %}
+                The details here should be correct.
+                {% endif %}
+            </p>
         </div>
 
         <div class="card-body">
@@ -87,7 +93,7 @@
     </div>
 
     {% if current_user.permission_lvl > 0 %}
-        <p>You cannot raise any sales opportunity appeal. Proceed to Dashboard to approve appeals!</p>
+        <p style="text-align:center">You cannot raise any sales opportunity appeal.</p>
     {% else %}
         <div class="card bg-light mb-3">
             <div class="card-header">
@@ -145,7 +151,7 @@
                         {{ wtf.render_field(form.assign_to_id, disabled=true) }}
                     </div>
 
-                    {{ wtf.render_field(form.submit) }}
+                    {{ wtf.render_field(form.submit, button_map={'submit': 'success'}) }}
                 </form>
             </div>
         </div>
