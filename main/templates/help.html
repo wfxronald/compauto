@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% import 'bootstrap/form.html' as wtf %}
+
+{% block app_content %}
+    <h1>Compass Automation (compauto) Documentation</h1>
+    <p>
+        Tired of the manual process of writing in to request for a sales opportunity appeal? Fret not because this
+        application is going to automate this menial process. This app will also make the life of those who need to
+        approve the appeal easier by consolidating all request in one application. Win-win for both parties!
+    </p>
+    <p>
+        Read on for the documentation of this application.
+    </p>
+
+    <h2>Overview of the Application</h2>
+    <p>
+        This application is meant to automate the manual process of sales opoortunity appeal. What is normally done
+        through paper or email will be replaced by an eForm that can be submitted by a banker through this application.
+    </p>
+    <p>
+        The workflow is as follows:
+    </p>
+    <p class="card card-body bg-info" style="text-align: center">
+        <strong>Banker &rarr; Team Lead &rarr; Team Manager &rarr; Sales Head &rarr; Approval &check;</strong>
+    </p>
+    <ol>
+        <li>A banker will complete the eForms to submit their appeal request.</li>
+        <li>The system will record the appeal request on the database.</li>
+        <li>A team lead requests for the pending appeal request and approves it.</li>
+        <li>The system will record the approval by team lead and reflects it accordingly (red).</li>
+        <li>A team manager requests for the appeal request approved by the team lead and approves it.</li>
+        <li>The system will record the approval by team manager and reflects it accordingly (yellow).</li>
+        <li>A sales head requests for the appeal request approved by the team manager and approves it.</li>
+        <li>The system will finally approve the request completely (green) and change the opportunity database.</li>
+    </ol>
+
+    <h2>For Banker</h2>
+    <p><strong>Main Use Case: </strong>To submit sales opportunity appeal</p>
+    <p>
+        When you first log in, you will be redirected to the homepage. You can fill up the eForm here to raise an
+        appeal. The homepage also shows some automatically generated information that should be reflected correctly
+        if the administrator creates the account successfully. Any discrepancy please report to the administrator -
+        only the administrator can make changes to the account details!
+    </p>
+    <div class="card">
+        <h3 class="card-header">Filling up the eForms</h3>
+        <div class="card-body">
+            <ul>
+            <li>
+                Use the CRM Application Number verifier to check if the data that you have input is indeed valid. If
+                the number exists in the database, it will show the details of the opportunity - which will act as a
+                good visual check if you have input the correct number. Otherwise, if the number does not exist in the
+                database, the app will give a warning that you have input an invalid CRM Application number.
+            </li>
+            <li>
+                If you have successfully verified the CRM Application Number, it will be automatically be copied into
+                the form that you would need to complete, saving you the effort of typing twice.
+            </li>
+            <li>
+                The staff number and staff ID are also linked based on the user database. If there is any discrepancy,
+                please rectify the issue with the administrator, requesting for a change in account details.
+            </li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>For Team Lead, Team Manager and Sales Head</h2>
+    <p><strong>Main Use Case: </strong>To approve sales opportunity appeal</p>
+    <p>
+        Similar to a banker, when you first log in, you will be redirected to a homepage where you can check the
+        automatically generated details. Clarify with the administrator if there is any discrepancies! The difference
+        between a banker and a team lead/team manager/sales head account is that a banker can raise an appeal, while
+        a team lead/team manager/sales head cannot raise any appeal.
+    </p>
+    <p>
+        Proceed to the dashboard to approve an appeal instead. This dashboard is not visible to any bankers.
+    </p>
+    <div class="card">
+        <h3 class="card-header">Approving an Appeal Request</h3>
+        <div class="card-body">
+            <ul>
+            <li>
+                Since all requests have gone through CRM Application Number verification, it is guaranteed that the
+                requests listed here reference a valid opportunity in the database.
+            </li>
+            <li>
+                A request will be reflected as a row in the table. A row can have four colours: white, red, yellow,
+                green - each corresponding to how far is each request at in terms of approval.
+                <ul>
+                    <li>White represents untouched requests: <strong>team lead</strong> needs to approve these.</li>
+                    <li>Red represents requests that were approved by team lead: <strong>team manager</strong> needs to approve these next.</li>
+                    <li>Yellow represents requests that were approved by team manager: <strong>sales head</strong> needs to approve these next.</li>
+                    <li>Green represents requests that were approved by sales head: these requests are <strong>completely approved</strong>.</li>
+                </ul>
+            </li>
+            <li>
+                It is impossible to deviate from the workflow, which means that if the team lead has not approve the
+                request, it is not possible for the team manager or sales head to approve the request in advance. This
+                is important to ensure that there is an organised workflow. <strong>This also means that once a sales
+                head approves the request, changes are final!</strong>
+            </li>
+            <li>
+                This is also where the team stored in the database becomes very important. Team lead can only approve
+                requests from bankers within his or her team. Basically, no cross-approval is allowed. If there is no
+                team assigned, an error will be raised - indicating that there is a problem on the administrator side.
+                Do contact the administrator if you encounter any problem with the allocation of teams.
+            </li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>For Administrator</h2>
+    <p><strong>Main Use Case: </strong>To create and manage accounts</p>
+    <p>
+        You should also be able to see your details in the homepage when you log in. However, the details here should
+        be rather standard. In fact, it should be correct as it is impossible to change any details regarding an
+        administrator account for safety reason.
+    </p>
+    <div class="card">
+        <h3 class="card-header">Managing Accounts</h3>
+        <div class="card-body">
+            <ul>
+            <li>
+                As an administrator, you should be able to execute three basic functions: to <strong>add</strong>,
+                <strong>edit</strong>, and <strong>delete</strong> user accounts. The edit and delete buttons are
+                placed in the table, so you can simply click on the row corresponding to the user you wish to edit or
+                delete.
+            </li>
+            <li>
+                As an administrator, you can also define "relationships" - which is important for the workflow as only
+                leaders of the team would be able to approve a certain request. For example, if a request is raised by
+                a banker from Raffles Place team, only the team lead of Raffles Place team can approve it, not the
+                Orchard team.
+                <ul>
+                    <li>
+                        If you fail to define all relationships possible, some staff may not be able to approve requests
+                        as they are supposed to, so you may be alerted of some problems by the staff.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                You can still access the request dashboard for monitoring purpose, but you cannot approve any request.
+            </li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}

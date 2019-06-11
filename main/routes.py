@@ -85,14 +85,14 @@ def login():
         if user is None or not user.check_password(form.password.data):
             flash('Invalid staff ID or password.')
             return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
 
+        login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         # Redirect to index if full URL is included to make the application more secure
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
-
         return redirect(next_page)
+
     return render_template('login.html', title='Sign In', form=form)
 
 
@@ -157,7 +157,7 @@ def dashboard():
             elif item.is_approved_by_teammanager:
                 return {'class': 'table-warning'}
             elif item.is_approved_by_teamlead:
-                return {'class': 'table-info'}
+                return {'class': 'table-danger'}
             else:
                 return {}
 
@@ -188,7 +188,14 @@ def approve():
             requester_team = User.query.filter_by(staff_id=req_to_be_approved.approving_teamlead_id).first().team
         else:  # Waiting to be approved by sales head, or already fully approved
             requester_team = User.query.filter_by(staff_id=req_to_be_approved.approving_teammanager_id).first().team
-        approver_team = Team.query.filter_by(from_team=requester_team).first().to_team
+
+        if user_team is None or requester_team is None:  # Admin forgets to assign a staff to a team
+            return None
+
+        approver = Team.query.filter_by(from_team=requester_team).first()
+        if approver is None:  # Admin forgets to create a relationship between two teams
+            return None
+        approver_team = approver.to_team
 
         return user_team == approver_team
 
@@ -201,8 +208,10 @@ def approve():
             flash('The request has been approved by Team Lead previously. Please push your Team Manager to approve.')
             return redirect(url_for('dashboard'))
 
-        # Check that team lead can only approve banker below him/her
-        if not can_approve(req_to_be_approved):
+        if can_approve(req_to_be_approved) is None:  # If admin forgets to set up, let user know
+            flash('An error has occurred on the administrator side. Please contact the administrator!')
+            return redirect(url_for('dashboard'))
+        elif not can_approve(req_to_be_approved):  # Check that team lead can only approve banker below him/her
             flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
@@ -222,8 +231,10 @@ def approve():
             flash('The request has been approved by Team Manager previously. Please push your Sales Head to approve.')
             return redirect(url_for('dashboard'))
 
-        # Check that team manager can only approve team lead below him/her
-        if not can_approve(req_to_be_approved):
+        if can_approve(req_to_be_approved) is None:  # If admin forgets to set up, let user know
+            flash('An error has occurred on the administrator side. Please contact the administrator!')
+            return redirect(url_for('dashboard'))
+        elif not can_approve(req_to_be_approved):  # Check that team manager can only approve team lead below him/her
             flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
@@ -246,8 +257,10 @@ def approve():
             flash('The request has been approved before. Cannot approve a request twice!')
             return redirect(url_for('dashboard'))
 
-        # Check that sales head can only approve team manager below him/her
-        if not can_approve(req_to_be_approved):
+        if can_approve(req_to_be_approved) is None:  # If admin forgets to set up, let user know
+            flash('An error has occurred on the administrator side. Please contact the administrator!')
+            return redirect(url_for('dashboard'))
+        elif not can_approve(req_to_be_approved):  # Check that sales head can only approve team manager below him/her
             flash('You are not authorised to approve this request. Check again if you are approving the right request!')
             return redirect(url_for('dashboard'))
 
@@ -553,3 +566,8 @@ def receiver():
     opp_serialized = selected_opp.__dict__
     opp_serialized.pop('_sa_instance_state')  # Remove the non-relevant key in the resulting dictionary
     return jsonify({"opp": opp_serialized, "success": True})
+
+
+@app.route('/help')
+def help():
+    return render_template('help.html', title='Documentation')
