@@ -10,7 +10,7 @@
     <div class="table-responsive">
         {{ user_table }}
     </div>
-    <a href="{{ url_for('edit') }}" class="btn btn-success">Add a new user</a>
+    <a href="{{ url_for('admin.edit') }}" class="btn btn-success">Add a new user</a>
 
     <h2>Relationships List</h2>
     <p>
@@ -20,5 +20,5 @@
     <div class="table-responsive">
         {{ team_table }}
     </div>
-    <a href="{{ url_for('define') }}" class="btn btn-success">Add a new relationship</a>
+    <a href="{{ url_for('admin.define') }}" class="btn btn-success">Add a new relationship</a>
 {% endblock %}

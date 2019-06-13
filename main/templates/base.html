@@ -16,7 +16,7 @@
 
 {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Compass Automation</a>
+        <a class="navbar-brand" href="{{ url_for('req.index') }}">Compass Automation</a>
         <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -24,35 +24,35 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    <a class="nav-link" href="{{ url_for('req.index') }}">Home</a>
                 </li>
                 {% if current_user.is_authenticated and current_user.permission_lvl > 0 %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('dash.dashboard') }}">Dashboard</a>
                 </li>
                 {% endif %}
                 {% if current_user.is_authenticated and current_user.permission_lvl == 4 %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin') }}">Account Manager</a>
+                    <a class="nav-link" href="{{ url_for('admin.admin') }}">Account Manager</a>
                 </li>
                 {% endif %}
                 {% if current_user.is_anonymous %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('opportunity') }}">Opportunity Database</a>
+                        <a class="nav-link" href="{{ url_for('opp.opportunity') }}">Opportunity Database</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('change') }}">Change Password</a>
+                        <a class="nav-link" href="{{ url_for('auth.change') }}">Change Password</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                     </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('help') }}">Help</a>
+                    <a class="nav-link" href="{{ url_for('docs.docs') }}">Help</a>
                 </li>
             </ul>
         </div>

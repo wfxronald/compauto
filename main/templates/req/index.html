@@ -38,7 +38,7 @@
 
     function contactReceiver(crmAppNo) {
         var jsonToTransfer = {"crm_app_no": crmAppNo};
-        $.ajax("{{ url_for('receiver') }}", {
+        $.ajax("{{ url_for('req.receiver') }}", {
             data: JSON.stringify(jsonToTransfer),
             contentType: 'application/json',
             type: 'POST',
