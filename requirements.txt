@@ -6,3 +6,4 @@ flask_login
 flask_table
 flask_bootstrap
 flask_moment
+pytest
