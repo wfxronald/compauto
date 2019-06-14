@@ -7,6 +7,7 @@ from main import db
 from main.req import req_bp
 
 
+@req_bp.route('/', methods=['GET', 'POST'])
 @req_bp.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
@@ -35,6 +36,10 @@ def index():
     current_time = datetime.utcnow()
 
     if form.validate_on_submit():
+        if current_user.permission_lvl > 0:  # Check if the person is a banker
+            flash("You cannot raise any sales opportunity appeal.")
+            return redirect(url_for('req.index'))
+
         req = Request(requester_name=current_user.staff_name,
                       requester_id=current_user.staff_id,
                       requester_designation=current_user.staff_designation,

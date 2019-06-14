@@ -10,7 +10,7 @@ from main.admin import admin_bp
 @admin_bp.route('/admin', methods=['GET'])
 @login_required
 def admin():
-    if current_user.permission_lvl < 3:
+    if current_user.permission_lvl < 4:
         flash('You have no permission to access this page.')
         return redirect(url_for('req.index'))
 
@@ -55,6 +55,10 @@ def admin():
 @admin_bp.route('/edit', methods=['GET', 'POST'])
 @login_required
 def edit():
+    if current_user.permission_lvl < 4:
+        flash('You have no permission to do this action.')
+        return redirect(url_for('req.index'))
+
     identifier = request.args.get('staff_id')
 
     if identifier:
@@ -101,6 +105,10 @@ def edit():
 @admin_bp.route('/delete', methods=['POST'])
 @login_required
 def delete():
+    if current_user.permission_lvl < 4:
+        flash('You have no permission to do this action.')
+        return redirect(url_for('req.index'))
+
     identifier = request.args.get('staff_id')
     to_delete = User.query.filter_by(staff_id=identifier).first()
 
@@ -117,6 +125,10 @@ def delete():
 @admin_bp.route('/reset', methods=['POST'])
 @login_required
 def reset():
+    if current_user.permission_lvl < 4:
+        flash('You have no permission to do this action.')
+        return redirect(url_for('req.index'))
+
     identifier = request.args.get('staff_id')
     to_reset = User.query.filter_by(staff_id=identifier).first()
 
@@ -133,6 +145,10 @@ def reset():
 @admin_bp.route('/clear', methods=['POST'])
 @login_required
 def clear():
+    if current_user.permission_lvl < 4:
+        flash('You have no permission to do this action.')
+        return redirect(url_for('req.index'))
+
     identifier = request.args.get('id')
     to_delete = Team.query.filter_by(id=identifier).first()
     db.session.delete(to_delete)
@@ -143,6 +159,10 @@ def clear():
 
 @admin_bp.route('/define', methods=['GET', 'POST'])
 def define():
+    if current_user.permission_lvl < 4:
+        flash('You have no permission to do this action.')
+        return redirect(url_for('req.index'))
+
     identifier = request.args.get('id')
 
     if identifier:

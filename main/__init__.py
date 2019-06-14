@@ -36,7 +36,7 @@ def create_app(config_class=Config):
     app.register_blueprint(dash_bp, url_prefix='/dash')
     app.register_blueprint(docs_bp, url_prefix='/docs')
     app.register_blueprint(opp_bp, url_prefix='/opp')
-    app.register_blueprint(req_bp, url_prefix='/req')
+    app.register_blueprint(req_bp)
 
     return app
 
