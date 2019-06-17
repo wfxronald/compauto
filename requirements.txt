@@ -7,3 +7,4 @@ flask_table
 flask_bootstrap
 flask_moment
 pytest
+bootstrap_flask
