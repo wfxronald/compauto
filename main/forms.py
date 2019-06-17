@@ -58,10 +58,20 @@ class AccountManagerForm(FlaskForm):
 class RelationshipForm(FlaskForm):
     begin = StringField('Relationship begins from', validators=[DataRequired()])
     end = StringField('Relationship ends at', validators=[DataRequired()])
+    team_id = None
+
+    def __init__(self, team_id=None, **kwargs):
+        super().__init__(**kwargs)
+        self.team_id = team_id
 
     def validate(self):
         if not FlaskForm.validate(self):
             return False
+
+        # If there is no change to the field, can simply ignore the validation and move on
+        if self.team_id and Team.query.filter_by(id=self.team_id).first().from_team == self.begin.data \
+                and Team.query.filter_by(id=self.team_id).first().to_team == self.end.data:
+            return True
 
         if Team.query.filter_by(from_team=self.begin.data, to_team=self.end.data).first():
             self.begin.errors.append('Such relationship already exists in the database.')

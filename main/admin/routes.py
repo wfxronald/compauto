@@ -167,7 +167,8 @@ def define():
 
     if identifier:
         form = RelationshipForm(begin=Team.query.filter_by(id=identifier).first().from_team,
-                                end=Team.query.filter_by(id=identifier).first().to_team)
+                                end=Team.query.filter_by(id=identifier).first().to_team,
+                                team_id=identifier)
     else:
         form = RelationshipForm()
 
@@ -181,6 +182,11 @@ def define():
 
         else:  # This is an edit operation
             to_edit = Team.query.filter_by(id=identifier).first()
+
+            if to_edit.from_team == form.begin.data and to_edit.to_team == form.end.data:
+                flash('No change was made to the database.')
+                return redirect(url_for('admin.admin'))
+
             to_edit.from_team = form.begin.data
             to_edit.to_team = form.end.data
             db.session.commit()
