@@ -19,7 +19,7 @@ class TestConfig(object):
     WTF_CSRF_ENABLED = False  # Should only be done during testing
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def test_client():
     flask_app = create_app(TestConfig)
     testing_client = flask_app.test_client()
@@ -32,7 +32,7 @@ def test_client():
     ctx.pop()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def init_database():
     db.create_all()
 

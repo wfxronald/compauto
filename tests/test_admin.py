@@ -19,7 +19,7 @@ class TestConfig(object):
     WTF_CSRF_ENABLED = False  # Should only be done during testing
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def test_client():
     flask_app = create_app(TestConfig)
     testing_client = flask_app.test_client()
@@ -85,6 +85,15 @@ def test_add_edit_user(test_client, init_database):
     assert b'Not a valid choice' in response.data
     response = test_client.get('/admin/admin', follow_redirects=True)
     assert b'I am a new admin' not in response.data
+
+    # Trying to edit an existing relationship, but did not change any field -> accepted with warning
+    response = test_client.post('/admin/edit?staff_id=0000001', data=dict(staff_id='0000001',
+                                                                          staff_name='Test Banker',
+                                                                          staff_designation='Banker',
+                                                                          permission_lvl=0,
+                                                                          team='Team A'),
+                                follow_redirects=True)
+    assert b'No change was made to the database.' in response.data
 
     # Should be able to edit an existing user
     response = test_client.post('/admin/edit?staff_id=0000001', data=dict(staff_id='0000001',

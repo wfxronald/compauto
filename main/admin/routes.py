@@ -90,6 +90,13 @@ def edit():
         else:
             to_edit = User.query.filter_by(staff_id=identifier).first()
 
+            if to_edit.staff_name == form.staff_name.data and \
+                    to_edit.staff_designation == form.staff_designation.data and \
+                    to_edit.permission_lvl == int(form.permission_lvl.data) and \
+                    to_edit.team == form.team.data:
+                flash('No change was made to the database.')
+                return redirect(url_for('admin.admin'))
+
             to_edit.staff_name = form.staff_name.data
             to_edit.staff_designation = form.staff_designation.data
             to_edit.permission_lvl = int(form.permission_lvl.data)
