@@ -32,7 +32,7 @@ def test_client():
     ctx.pop()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def init_database():
     db.create_all()
 
@@ -41,6 +41,9 @@ def init_database():
     for u in [u1, a]:
         u.set_password('testing')
         db.session.add(u)
+
+    r1 = Team(from_team='Apple', to_team='Banana')
+    db.session.add(r1)
     db.session.commit()
 
     yield db
@@ -143,9 +146,140 @@ def test_add_edit_user(test_client, init_database):
     assert b'User successfully edited.' not in response.data
     assert b'You have no permission to do this action.' in response.data
 
+    logout(test_client)
 
-# TODO: Write test for deleting user
-# TODO: Write test for resetting the user password
-# TODO: Write test for adding relationship
-# TODO: Write test for deleting relationship
 
+def test_delete_user(test_client, init_database):
+    login(test_client, '4000001', 'testing')  # Log in as an admin
+
+    # Add a new user to be deleted
+    test_client.post('/admin/edit', data=dict(staff_id='1000001',
+                                                       staff_name='Test Team Lead',
+                                                       staff_designation='Team Lead',
+                                                       permission_lvl=1,
+                                                       team='Team B'),
+                     follow_redirects=True)
+
+    # Delete as an admin -> successfully deleted
+    response = test_client.post('/admin/delete?staff_id=1000001', follow_redirects=True)
+    assert b'User successfully deleted.' in response.data
+    assert b'Test Team Lead' not in response.data
+    assert b'1000001' not in response.data
+
+    # Trying to delete an admin account -> not allowed
+    response = test_client.post('/admin/delete?staff_id=4000001', follow_redirects=True)
+    assert b'To prevent disaster, you cannot delete an Administrator account' in response.data
+    assert b'User successfully deleted.' not in response.data
+    assert b'Test Administrator' in response.data
+    assert b'4000001' in response.data
+
+    logout(test_client)
+    login(test_client, '0000001', 'testing')  # Login as Test Banker
+
+    # Non-admin trying to delete an account -> should fail
+    response = test_client.post('/admin/delete?staff_id=4000001', follow_redirects=True)
+    assert b'You have no permission to do this action.' in response.data
+
+    logout(test_client)
+
+
+def change_pass(client, old_pass, new_pass, repeat_new_pass):
+    return client.post('/auth/change', data=dict(old_pass=old_pass,
+                                                 new_pass=new_pass,
+                                                 repeat_new_pass=repeat_new_pass),
+                       follow_redirects=True)
+
+
+def test_reset_password(test_client, init_database):
+    login(test_client, '0000001', 'testing')  # Log in as Test Banker
+    change_pass(test_client, 'testing', 'somethingelse', 'somethingelse')
+    logout(test_client)
+
+    # Reset password of admin account -> not allowed
+    login(test_client, '4000001', 'testing')  # Log in as an admin
+    response = test_client.post('/admin/reset?staff_id=4000001', follow_redirects=True)
+    assert b'Password successfully reset.' not in response.data
+    assert b'To prevent disaster, you cannot reset the password of an Administrator account' in response.data
+
+    response = test_client.post('/admin/reset?staff_id=0000001', follow_redirects=True)
+    assert b'Password successfully reset.' in response.data
+
+    logout(test_client)
+    response = login(test_client, '0000001', 'somethingelse')  # Log in as Test Banker with old password
+    assert b'Invalid staff ID or password.' in response.data
+
+    response = login(test_client, '0000001', 'test')  # Log in as Test Banker with reset password
+    assert b'Invalid staff ID or password.' not in response.data
+    assert b'Welcome, Test Banker!' in response.data
+
+    # Cannot reset password if not admin
+    response = test_client.post('/admin/reset?staff_id=0000001', follow_redirects=True)
+    assert b'You have no permission to do this action.' in response.data
+
+    logout(test_client)
+
+
+def test_add_edit_relationship(test_client, init_database):
+    login(test_client, '0000001', 'testing')  # Log in as Test Banker
+
+    # Cannot add relationship if not admin
+    response = test_client.post('/admin/define', follow_redirects=True)
+    assert b'You have no permission to do this action.' in response.data
+
+    # Cannot edit relationship if not admin
+    response = test_client.post('/admin/define?id=1', follow_redirects=True)
+    assert b'You have no permission to do this action.' in response.data
+
+    logout(test_client)
+    login(test_client, '4000001', 'testing')  # Log in as an admin
+
+    # Trying to add an existing relationship -> rejected
+    response = test_client.post('/admin/define', data=dict(begin='Apple',
+                                                           end='Banana'),
+                                follow_redirects=True)
+    assert b'Such relationship already exists in the database.' in response.data
+
+    # Trying to edit an existing relationship, but did not change any field -> accepted with warning
+    response = test_client.post('/admin/define?id=1', data=dict(begin='Apple',
+                                                                end='Banana'),
+                                follow_redirects=True)
+    assert b'No change was made to the database.' in response.data
+
+    # Trying to add a new relationship -> accepted
+    response = test_client.post('/admin/define', data=dict(begin='Xylophone',
+                                                           end='Yoyo'),
+                                follow_redirects=True)
+    assert b'Relationship successfully added.' in response.data
+    assert b'Team X', b'Team Y' in response.data
+
+    # Trying to edit a relationship into an existing one -> rejected
+    response = test_client.post('/admin/define?id=2', data=dict(begin='Apple',
+                                                                end='Banana'),
+                                follow_redirects=True)
+    assert b'Such relationship already exists in the database.' in response.data
+
+    # Trying to edit a relationship into a new one -> accepted
+    response = test_client.post('/admin/define?id=2', data=dict(begin='Banana',
+                                                                end='Cherry'),
+                                follow_redirects=True)
+    assert b'Relationship successfully edited.' in response.data
+
+    logout(test_client)
+
+
+def test_delete_relationship(test_client, init_database):
+    login(test_client, '0000001', 'testing')  # Log in as Test Banker
+
+    # Cannot add relationship if not admin
+    response = test_client.post('/admin/clear?id=1', follow_redirects=True)
+    assert b'You have no permission to do this action.' in response.data
+
+    logout(test_client)
+    login(test_client, '4000001', 'testing')  # Log in as an admin
+
+    # Delete relationship
+    response = test_client.post('/admin/clear?id=1', follow_redirects=True)
+    assert b'Relationship successfully deleted.' in response.data
+    assert b'Team A', b'Team B' not in response.data
+
+    logout(test_client)

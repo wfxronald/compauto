@@ -100,7 +100,7 @@ def approve():
         else:  # Waiting to be approved by sales head, or already fully approved
             requester_team = User.query.filter_by(staff_id=req.approving_teammanager_id).first().team
 
-        if user_team is None or requester_team is None:  # Admin forgets to assign a staff to a team
+        if not user_team or not requester_team:  # Admin forgets to assign a staff to a team
             return None
 
         approver = Team.query.filter_by(from_team=requester_team).first()

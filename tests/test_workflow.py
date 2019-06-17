@@ -1,6 +1,7 @@
 import os
 import sys
 import pytest
+from flask import json
 
 # Include the path of the root directory
 path = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +33,7 @@ def test_client():
     ctx.pop()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def init_database():
     db.create_all()
 
@@ -44,6 +45,7 @@ def init_database():
               permission_lvl=2, team='Team C')
     u4 = User(staff_id='3000001', staff_name='Test Sales Head', staff_designation='Sales Head',
               permission_lvl=3, team='Team D')
+    u5 = User(staff_id='4000001', staff_name='Test Administrator', staff_designation='Account Manager', permission_lvl=4)
 
     v1 = User(staff_id='0000002', staff_name='Test Banker 2', staff_designation='Banker',
               permission_lvl=0, team='Team A2')
@@ -53,7 +55,7 @@ def init_database():
               permission_lvl=2, team='Team C2')
     v4 = User(staff_id='3000002', staff_name='Test Sales Head 2', staff_designation='Sales Head',
               permission_lvl=3, team='Team D2')
-    for u in [u1, u2, u3, u4, v1, v2, v3, v4]:
+    for u in [u1, u2, u3, u4, u5, v1, v2, v3, v4]:
         u.set_password('testing')
         db.session.add(u)
     db.session.commit()
@@ -81,6 +83,17 @@ def login(client, staff_id, password):
 
 def logout(client):
     return client.get('/auth/logout', follow_redirects=True)
+
+
+def test_crm_no_verifier(test_client, init_database):
+    response = test_client.post('/receiver', data=json.dumps(dict(crm_app_no="AD123456789")),
+                                content_type='application/json', follow_redirects=True)
+    assert b'"success":true' in response.data
+
+    # Put in a random crm_app_no that does not exist -> fails
+    response = test_client.post('/receiver', data=json.dumps(dict(crm_app_no="AD000000000")),
+                                content_type='application/json', follow_redirects=True)
+    assert b'"success":false' in response.data
 
 
 def test_create_request(test_client, init_database):
@@ -247,4 +260,72 @@ def test_hierarchy_system(test_client, init_database):
     response = test_client.post('/dash/approve?id=1', follow_redirects=True)  # Cannot approve twice
     assert b'The request has been approved before. Cannot approve a request twice!' in response.data
 
+    logout(test_client)
+
+
+def test_forget_set_team(test_client, init_database):
+    # Create a mock request by Test Banker
+    login(test_client, '0000001', 'testing')  # Login as a banker
+    test_client.post('/index', data=dict(crm_app_no='AD123456789',
+                                         reason='late',
+                                         closed_by_name='Test Banker',
+                                         closed_by_id='0000001',
+                                         assign_to_name='Test Banker',
+                                         assign_to_id='0000001'),
+                     follow_redirects=True)
+    logout(test_client)
+
+    # Remove Test Team Lead's team
+    User.query.filter_by(staff_id='1000001').first().team = ""
+
+    # Now, Test Team Lead cannot approve even though Test Banker is in his team
+    login(test_client, '1000001', 'testing')  # Login as Test Team Lead
+    response = test_client.post('/dash/approve?id=1', follow_redirects=True)
+    assert b'An error has occurred on the administrator side. Please contact the administrator!' in response.data
+
+    logout(test_client)
+
+
+def test_forget_set_relationship(test_client, init_database):
+    # Create a mock request by Test Banker
+    login(test_client, '0000001', 'testing')  # Login as a banker
+    test_client.post('/index', data=dict(crm_app_no='AD123456789',
+                                         reason='late',
+                                         closed_by_name='Test Banker',
+                                         closed_by_id='0000001',
+                                         assign_to_name='Test Banker',
+                                         assign_to_id='0000001'),
+                     follow_redirects=True)
+    logout(test_client)
+
+    login(test_client, '4000001', 'testing')  # Log in as an admin
+    test_client.post('/admin/clear?id=1', follow_redirects=True)  # 'Accidentally' delete some relationships
+    test_client.post('/admin/clear?id=2', follow_redirects=True)
+    test_client.post('/admin/clear?id=3', follow_redirects=True)
+    logout(test_client)
+
+    # Now, even if the workflow is correct, no one can approve anything
+    login(test_client, '1000001', 'testing')  # Login as Test Team Lead
+    response = test_client.post('/dash/approve?id=1', follow_redirects=True)
+    assert b'An error has occurred on the administrator side. Please contact the administrator!' in response.data
+    logout(test_client)
+
+    login(test_client, '2000001', 'testing')  # Login as Test Team Manager
+    # Pretend it has been approved by team lead
+    r = Request.query.filter_by(id=1).first()
+    r.is_approved_by_teamlead = True
+    r.approving_teamlead_name = 'Test Team Lead'
+    r.approving_teamlead_id = '1000001'
+    response = test_client.post('/dash/approve?id=1', follow_redirects=True)
+    assert b'An error has occurred on the administrator side. Please contact the administrator!' in response.data
+    logout(test_client)
+
+    login(test_client, '3000001', 'testing')  # Login as Test Sales Head
+    # Pretend it has been approved by team manager
+    r = Request.query.filter_by(id=1).first()
+    r.is_approved_by_teammanager = True
+    r.approving_teammanager_name = 'Test Team Manager'
+    r.approving_teammanager_id = '2000001'
+    response = test_client.post('/dash/approve?id=1', follow_redirects=True)
+    assert b'An error has occurred on the administrator side. Please contact the administrator!' in response.data
     logout(test_client)

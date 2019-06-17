@@ -49,6 +49,12 @@ def init_database():
     for u in [u1, u2, u3, u4, u5]:
         u.set_password('testing')
         db.session.add(u)
+
+    opp = Opportunity(CRM_Appln_No='AD123456789')
+    req = Request(crm_app_no='AD123456789', reason='late', closed_by_name='Test Banker', closed_by_id='0000001',
+                  assign_to_name='Test Banker', assign_to_id='0000001')
+    db.session.add(opp)
+    db.session.add(req)
     db.session.commit()
 
     yield db
@@ -78,6 +84,10 @@ def test_guest_view(test_client, init_database):
 
     # Check the content of the login page
     assert b'Sign In' in response.data
+
+    # Guest can access help page
+    response = test_client.get('/docs/docs', follow_redirects=True)
+    assert b'Documentation' in response.data
 
 
 def test_banker_view(test_client, init_database):
@@ -216,5 +226,10 @@ def test_admin_view(test_client, init_database):
     assert b'The details here should be correct.' in response.data
     assert b'CRM Application Number Verifier' not in response.data
     assert b'Sales Opportunity Appeal Form' not in response.data
+
+    # Try approving request -> rejected
+    response = test_client.post('/dash/approve?id=1', follow_redirects=True)
+    assert b'You are not allowed to approve any appeal. Proceed to Account Manager to manage accounts instead.' \
+           in response.data
 
     logout(test_client)
